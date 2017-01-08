@@ -11,11 +11,11 @@ import java.util.function.Supplier;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class JavaOutput extends SimpleJavaFileObject implements Supplier<ByteBuffer> {
+public final class ByteArrayOutput extends SimpleJavaFileObject implements Supplier<ByteBuffer> {
 
     private final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
-    public JavaOutput(URI uri, Kind kind) {
+    public ByteArrayOutput(URI uri, Kind kind) {
         super(uri, kind);
     }
 

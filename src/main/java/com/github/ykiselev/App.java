@@ -37,7 +37,7 @@ public final class App {
         final StringWriter out = new StringWriter();
         final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         final Boolean result;
-        final ClassStorage.Default<JavaOutput> storage = new ClassStorage.Default<>(getClass().getClassLoader());
+        final ClassStorage.Default<ByteArrayOutput> storage = new ClassStorage.Default<>(getClass().getClassLoader());
         try (
                 StandardJavaFileManager fileManager = compiler.getStandardFileManager(
                         this::report,

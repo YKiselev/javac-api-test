@@ -1,6 +1,6 @@
 package com.github.ykiselev.compilation;
 
-import com.github.ykiselev.JavaOutput;
+import com.github.ykiselev.ByteArrayOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,9 +19,9 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final ClassStorage<JavaOutput> storage;
+    private final ClassStorage<ByteArrayOutput> storage;
 
-    public StorageBackedJavaFileManager(JavaFileManager fileManager, ClassStorage<JavaOutput> storage) {
+    public StorageBackedJavaFileManager(JavaFileManager fileManager, ClassStorage<ByteArrayOutput> storage) {
         super(fileManager);
         this.storage = Objects.requireNonNull(storage);
     }
@@ -34,7 +34,7 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
         logger.debug("Requested java file output for {}, {} : {}, {}", location, kind, className, sibling);
-        final JavaOutput result = new JavaOutput(
+        final ByteArrayOutput result = new ByteArrayOutput(
                 URI.create("bytes:///" + className.replace('.', '/')),
                 kind
         );

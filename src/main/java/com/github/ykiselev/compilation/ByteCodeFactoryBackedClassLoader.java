@@ -24,9 +24,9 @@ public final class ByteCodeFactoryBackedClassLoader extends SecureClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        logger.debug("Loading {}...", name);
         final ByteBuffer buffer = byteCodeFactory.get(name);
         if (buffer != null) {
+            logger.debug("Loading {}, {} bytes...", () -> name, buffer::remaining);
             return super.defineClass(name, buffer, (ProtectionDomain) null);
         }
         return super.findClass(name);
