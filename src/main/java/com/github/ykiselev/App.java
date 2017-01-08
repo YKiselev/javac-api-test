@@ -1,11 +1,15 @@
 package com.github.ykiselev;
 
-import com.github.ykiselev.compilation.InMemoryJavaFileManager;
+import com.github.ykiselev.compilation.ClassStorage;
+import com.github.ykiselev.compilation.StorageBackedJavaFileManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.tools.*;
 import java.io.File;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.function.Function;
@@ -15,8 +19,17 @@ import java.util.function.Function;
  */
 public final class App {
 
+    private final Logger logger = LogManager.getLogger(getClass());
+
     public static void main(String[] args) throws Exception {
         new App().run();
+    }
+
+    private JavaSource source(String path) {
+        return new JavaSource(
+                new File(path).toURI(),
+                JavaFileObject.Kind.SOURCE
+        );
     }
 
     private void run() throws Exception {
@@ -24,13 +37,17 @@ public final class App {
         final StringWriter out = new StringWriter();
         final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         final Boolean result;
-        final ClassLoader classLoader;
-        try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(
-                this::report,
-                Locale.getDefault(),
-                StandardCharsets.UTF_8
-        );
-             InMemoryJavaFileManager forwardingFileManager = new InMemoryJavaFileManager(fileManager)
+        final ClassStorage.Default<JavaOutput> storage = new ClassStorage.Default<>(getClass().getClassLoader());
+        try (
+                StandardJavaFileManager fileManager = compiler.getStandardFileManager(
+                        this::report,
+                        Locale.getDefault(),
+                        StandardCharsets.UTF_8
+                );
+                StorageBackedJavaFileManager forwardingFileManager = new StorageBackedJavaFileManager(
+                        fileManager,
+                        storage
+                )
         ) {
             // set output dir
             fileManager.setLocation(
@@ -45,37 +62,41 @@ public final class App {
                     diagnostics,
                     null,
                     null,
-                    Collections.singletonList(
-                            new JavaSource(
-                                    new File("src/main/scripts/org/xyz/Foo.java").toURI(),
-                                    JavaFileObject.Kind.SOURCE
-                            )
+                    Arrays.asList(
+                            source("src/main/scripts/org/xyz/Foo.java"),
+                            source("src/main/scripts/org/xyz/Bar.java")
                     )
             );
             result = task.call();
-            classLoader = forwardingFileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
         }
-        System.out.println(out.toString());
-        if (result != Boolean.TRUE) {
-            System.out.println("Compilation failed!");
-        } else {
-            System.out.println("Compilation successful!");
-            final Class<?> clazz = classLoader.loadClass("org.xyz.Foo");
-            final Function<String,Double> s2d = Function.class.cast(clazz.newInstance());
-            System.out.println("Loaded class" + clazz +", '123.456'="+s2d.apply("123.456"));
+
+        final String output = out.toString();
+        if (!output.isEmpty()) {
+            logger.info(output);
         }
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
             report(diagnostic);
         }
+
+        if (result != Boolean.TRUE) {
+            logger.error("Compilation failed!");
+        } else {
+            logger.info("Compilation successful!");
+
+            final ClassLoader classLoader = storage.classLoader();
+            final Class<?> clazz = classLoader.loadClass("org.xyz.Foo");
+            final Function<String, Double> s2d = Function.class.cast(clazz.newInstance());
+            logger.info("Loaded {}, '123.456'={}", clazz, s2d.apply("123.456"));
+        }
     }
 
     private void report(Diagnostic<? extends JavaFileObject> diagnostic) {
-        System.out.println(diagnostic.getCode());
-        System.out.println(diagnostic.getKind());
-        System.out.println(diagnostic.getPosition());
-        System.out.println(diagnostic.getStartPosition());
-        System.out.println(diagnostic.getEndPosition());
-        System.out.println(diagnostic.getSource());
-        System.out.println(diagnostic.getMessage(Locale.getDefault()));
+        logger.info(diagnostic.getCode());
+        logger.info(diagnostic.getKind());
+        logger.info(diagnostic.getPosition());
+        logger.info(diagnostic.getStartPosition());
+        logger.info(diagnostic.getEndPosition());
+        logger.info(diagnostic.getSource());
+        logger.info(diagnostic.getMessage(Locale.getDefault()));
     }
 }

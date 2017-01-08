@@ -26,9 +26,9 @@ public final class JavaSource extends SimpleJavaFileObject {
     }
 
     private InputStream open(URI uri) throws IOException {
-        if ("classpath".equals(uri.getScheme())) {
-            return getClass().getResourceAsStream(uri.getPath().replaceFirst("/", ""));
-        }
+//        if ("classpath".equals(uri.getScheme())) {
+//            return getClass().getResourceAsStream(uri.getPath().replaceFirst("/", ""));
+//        }
         return uri.toURL().openStream();
     }
 }

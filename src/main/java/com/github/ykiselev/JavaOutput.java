@@ -5,11 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class JavaOutput extends SimpleJavaFileObject {
+public final class JavaOutput extends SimpleJavaFileObject implements Supplier<ByteBuffer> {
 
     private final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
@@ -22,7 +24,8 @@ public final class JavaOutput extends SimpleJavaFileObject {
         return os;
     }
 
-    public byte[] toByteArray() {
-        return os.toByteArray();
+    @Override
+    public ByteBuffer get() {
+        return ByteBuffer.wrap(os.toByteArray());
     }
 }
