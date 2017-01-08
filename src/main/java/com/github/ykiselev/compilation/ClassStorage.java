@@ -8,34 +8,35 @@ import java.util.function.Supplier;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public interface ClassStorage<I extends Supplier<ByteBuffer>> {
+public interface ClassStorage {
 
-    void put(String className, I value);
+    void put(String className, Supplier<ByteBuffer> value);
 
     ClassLoader classLoader();
 
     /**
      * Default implementation of storage, backed by {@link ConcurrentHashMap}
-     *
-     * @param <I>
      */
-    final class Default<I extends Supplier<ByteBuffer>> implements ClassStorage<I> {
+    final class Default implements ClassStorage {
 
-        private final Map<String, I> map = new ConcurrentHashMap<>();
+        private final Map<String, Supplier<ByteBuffer>> map = new ConcurrentHashMap<>();
 
         private final ByteCodeFactoryBackedClassLoader classLoader;
 
         public Default(ClassLoader parent) {
-            this.classLoader = new ByteCodeFactoryBackedClassLoader(parent, this::getByteCode);
+            this.classLoader = new ByteCodeFactoryBackedClassLoader(
+                    parent,
+                    this::getByteCode
+            );
         }
 
         private ByteBuffer getByteCode(String className) {
-            final I item = map.get(className);
+            final Supplier<ByteBuffer> item = map.get(className);
             return item != null ? item.get() : null;
         }
 
         @Override
-        public void put(String className, I value) {
+        public void put(String className, Supplier<ByteBuffer> value) {
             map.put(className, value);
         }
 

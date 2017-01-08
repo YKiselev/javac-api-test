@@ -1,4 +1,4 @@
-package com.github.ykiselev;
+package com.github.ykiselev.compilation;
 
 import org.apache.commons.io.IOUtils;
 

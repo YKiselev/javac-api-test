@@ -1,6 +1,7 @@
 package com.github.ykiselev;
 
 import com.github.ykiselev.compilation.ClassStorage;
+import com.github.ykiselev.compilation.JavaSource;
 import com.github.ykiselev.compilation.StorageBackedJavaFileManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,12 +18,12 @@ import java.util.function.Function;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class App {
+public final class CompilerApp {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
     public static void main(String[] args) throws Exception {
-        new App().run();
+        new CompilerApp().run();
     }
 
     private JavaSource source(String path) {
@@ -37,7 +38,7 @@ public final class App {
         final StringWriter out = new StringWriter();
         final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         final Boolean result;
-        final ClassStorage.Default<ByteArrayOutput> storage = new ClassStorage.Default<>(getClass().getClassLoader());
+        final ClassStorage.Default storage = new ClassStorage.Default(getClass().getClassLoader());
         try (
                 StandardJavaFileManager fileManager = compiler.getStandardFileManager(
                         this::report,

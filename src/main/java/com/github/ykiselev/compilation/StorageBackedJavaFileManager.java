@@ -1,6 +1,5 @@
 package com.github.ykiselev.compilation;
 
-import com.github.ykiselev.ByteArrayOutput;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,9 +18,9 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final ClassStorage<ByteArrayOutput> storage;
+    private final ClassStorage storage;
 
-    public StorageBackedJavaFileManager(JavaFileManager fileManager, ClassStorage<ByteArrayOutput> storage) {
+    public StorageBackedJavaFileManager(JavaFileManager fileManager, ClassStorage storage) {
         super(fileManager);
         this.storage = Objects.requireNonNull(storage);
     }
