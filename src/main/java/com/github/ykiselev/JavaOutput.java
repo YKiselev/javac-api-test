@@ -21,4 +21,8 @@ public final class JavaOutput extends SimpleJavaFileObject {
     public OutputStream openOutputStream() throws IOException {
         return os;
     }
+
+    public byte[] toByteArray() {
+        return os.toByteArray();
+    }
 }

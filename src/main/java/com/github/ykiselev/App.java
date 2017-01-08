@@ -1,16 +1,14 @@
 package com.github.ykiselev;
 
+import com.github.ykiselev.compilation.InMemoryJavaFileManager;
+
 import javax.tools.*;
 import java.io.File;
-import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Locale;
+import java.util.function.Function;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
@@ -26,47 +24,14 @@ public final class App {
         final StringWriter out = new StringWriter();
         final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
         final Boolean result;
-        final List<JavaOutput> outputs = new ArrayList<>();
+        final ClassLoader classLoader;
         try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(
                 this::report,
                 Locale.getDefault(),
                 StandardCharsets.UTF_8
-        )) {
-            final ForwardingJavaFileManager forwardingFileManager = new ForwardingJavaFileManager<StandardJavaFileManager>(fileManager) {
-                @Override
-                public FileObject getFileForOutput(Location location, String packageName, String relativeName, FileObject sibling) throws IOException {
-                    System.out.println("Need file object for " + location + ", " + packageName + ", " + relativeName + ", " + sibling);
-                    return super.getFileForOutput(location, packageName, relativeName, sibling);
-                }
-
-                @Override
-                public ClassLoader getClassLoader(Location location) {
-                    System.out.println("Need classloader for " + location);
-                    return super.getClassLoader(location);
-                }
-
-                @Override
-                public JavaFileObject getJavaFileForInput(Location location, String className, JavaFileObject.Kind kind) throws IOException {
-                    System.out.println("Need input: " + location + ", " + className + "," + kind);
-                    return super.getJavaFileForInput(location, className, kind);
-                }
-
-                @Override
-                public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
-                    System.out.println("Need java file output: " + location + ", " + className + "," + kind + ", " + sibling);
-                    if (location == StandardLocation.CLASS_OUTPUT) {
-                        final JavaOutput result;
-                        try {
-                            result = new JavaOutput(new URI("class:///" + className), kind);
-                        } catch (URISyntaxException e) {
-                            throw new RuntimeException(e);
-                        }
-                        outputs.add(result);
-                        return result;
-                    }
-                    return super.getJavaFileForOutput(location, className, kind, sibling);
-                }
-            };
+        );
+             InMemoryJavaFileManager forwardingFileManager = new InMemoryJavaFileManager(fileManager)
+        ) {
             // set output dir
             fileManager.setLocation(
                     StandardLocation.CLASS_OUTPUT,
@@ -82,21 +47,22 @@ public final class App {
                     null,
                     Collections.singletonList(
                             new JavaSource(
-                                    new File("src/main/java/org/xyz/Foo.java").toURI(),
+                                    new File("src/main/scripts/org/xyz/Foo.java").toURI(),
                                     JavaFileObject.Kind.SOURCE
                             )
                     )
             );
             result = task.call();
+            classLoader = forwardingFileManager.getClassLoader(StandardLocation.CLASS_OUTPUT);
         }
         System.out.println(out.toString());
         if (result != Boolean.TRUE) {
             System.out.println("Compilation failed!");
         } else {
             System.out.println("Compilation successful!");
-            for (JavaOutput output : outputs) {
-                System.out.println("Class file: " + output);
-            }
+            final Class<?> clazz = classLoader.loadClass("org.xyz.Foo");
+            final Function<String,Double> s2d = Function.class.cast(clazz.newInstance());
+            System.out.println("Loaded class" + clazz +", '123.456'="+s2d.apply("123.456"));
         }
         for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
             report(diagnostic);
