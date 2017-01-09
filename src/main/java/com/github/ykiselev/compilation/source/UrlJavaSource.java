@@ -1,20 +1,19 @@
-package com.github.ykiselev.compilation;
+package com.github.ykiselev.compilation.source;
 
 import org.apache.commons.io.IOUtils;
 
 import javax.tools.SimpleJavaFileObject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class JavaSource extends SimpleJavaFileObject {
+public final class UrlJavaSource extends SimpleJavaFileObject {
 
-    public JavaSource(URI uri, Kind kind) {
+    public UrlJavaSource(URI uri, Kind kind) {
         super(uri, kind);
     }
 
@@ -26,9 +25,6 @@ public final class JavaSource extends SimpleJavaFileObject {
     }
 
     private InputStream open(URI uri) throws IOException {
-//        if ("classpath".equals(uri.getScheme())) {
-//            return getClass().getResourceAsStream(uri.getPath().replaceFirst("/", ""));
-//        }
         return uri.toURL().openStream();
     }
 }

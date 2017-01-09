@@ -1,7 +1,7 @@
 package com.github.ykiselev.console;
 
 import com.github.ykiselev.compilation.ClassFactory;
-import com.github.ykiselev.compilation.JavaSource;
+import com.github.ykiselev.compilation.source.UrlJavaSource;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import com.github.ykiselev.console.CommandProcessor.CommandHandler;
 import com.google.common.base.Preconditions;
@@ -106,7 +106,7 @@ public final class App {
     }
 
     private JavaFileObject source(String className) {
-        return new JavaSource(
+        return new UrlJavaSource(
                 base.resolve(className.replace(".", "/") + JavaFileObject.Kind.SOURCE.extension).normalize().toUri(),
                 JavaFileObject.Kind.SOURCE
         );

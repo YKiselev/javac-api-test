@@ -1,4 +1,6 @@
-package com.github.ykiselev.compilation;
+package com.github.ykiselev.compilation.compiled;
+
+import com.github.ykiselev.compilation.ByteCodeFactoryBackedClassLoader;
 
 import java.nio.ByteBuffer;
 import java.util.Map;

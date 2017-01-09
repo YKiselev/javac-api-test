@@ -1,4 +1,4 @@
-package com.github.ykiselev.compilation;
+package com.github.ykiselev.compilation.compiled;
 
 import javax.tools.SimpleJavaFileObject;
 import java.io.ByteArrayOutputStream;

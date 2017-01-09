@@ -1,6 +1,9 @@
 package com.github.ykiselev.compilation;
 
+import com.github.ykiselev.compilation.compiled.ByteArrayOutput;
+import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.SourceStorage;
+import com.github.ykiselev.compilation.source.HasBinaryName;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
@@ -54,8 +57,8 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public String inferBinaryName(Location location, JavaFileObject file) {
         logger.debug("binary name required {} for {}", location, file);
-        if (file instanceof JavaSource) {
-            return sourceStorage.inferBinaryName(file);
+        if (file instanceof HasBinaryName) {
+            return ((HasBinaryName) file).binaryName();
         }
         return super.inferBinaryName(location, file);
     }

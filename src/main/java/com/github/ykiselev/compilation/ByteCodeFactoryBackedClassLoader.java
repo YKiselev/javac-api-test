@@ -1,5 +1,6 @@
 package com.github.ykiselev.compilation;
 
+import com.github.ykiselev.compilation.compiled.ByteCodeFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

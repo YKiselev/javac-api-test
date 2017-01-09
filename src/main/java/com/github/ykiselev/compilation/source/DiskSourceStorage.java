@@ -1,8 +1,8 @@
 package com.github.ykiselev.compilation.source;
 
-import com.github.ykiselev.compilation.JavaSource;
 import org.apache.commons.io.FilenameUtils;
 
+import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileObject;
 import java.io.File;
 import java.io.IOException;
@@ -47,20 +47,35 @@ public final class DiskSourceStorage implements SourceStorage {
         );
     }
 
-    @Override
-    public String inferBinaryName(JavaFileObject object) {
-        final String relative = base.relativize(
-                Paths.get(object.toUri())
-        ).toString();
-        return FilenameUtils.removeExtension(relative)
-                .replace(File.separator, ".");
-    }
-
     private String classNameToFileName(String className) {
         return className.replace(".", "/") + JavaFileObject.Kind.SOURCE.extension;
     }
 
     private JavaFileObject fromPath(Path path) {
-        return new JavaSource(path.toUri(), JavaFileObject.Kind.SOURCE);
+        return new FileObject(
+                new UrlJavaSource(
+                        path.toUri(),
+                        JavaFileObject.Kind.SOURCE
+                )
+        );
+    }
+
+    /**
+     *
+     */
+    private class FileObject extends ForwardingJavaFileObject<JavaFileObject> implements HasBinaryName {
+
+        private FileObject(JavaFileObject fileManager) {
+            super(fileManager);
+        }
+
+        @Override
+        public String binaryName() {
+            final String relative = base.relativize(
+                    Paths.get(toUri())
+            ).toString();
+            return FilenameUtils.removeExtension(relative)
+                    .replace(File.separator, ".");
+        }
     }
 }

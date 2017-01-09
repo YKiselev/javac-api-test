@@ -1,7 +1,7 @@
 package com.github.ykiselev;
 
-import com.github.ykiselev.compilation.ClassStorage;
-import com.github.ykiselev.compilation.JavaSource;
+import com.github.ykiselev.compilation.compiled.ClassStorage;
+import com.github.ykiselev.compilation.source.UrlJavaSource;
 import com.github.ykiselev.compilation.StorageBackedJavaFileManager;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import org.apache.logging.log4j.LogManager;
@@ -28,8 +28,8 @@ public final class CompilerApp {
         new CompilerApp().run();
     }
 
-    private JavaSource source(String path) {
-        return new JavaSource(
+    private UrlJavaSource source(String path) {
+        return new UrlJavaSource(
                 new File(path).toURI(),
                 JavaFileObject.Kind.SOURCE
         );

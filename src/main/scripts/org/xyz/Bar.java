@@ -14,6 +14,7 @@ public final class Bar {
     }
 
     public Bar(Foo foo) {
+        System.out.println("Bar#init() called!");
         this.foo = Objects.requireNonNull(foo);
     }
 

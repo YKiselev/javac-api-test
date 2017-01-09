@@ -12,5 +12,4 @@ public interface SourceStorage {
 
     JavaFileObject resolve(String className) throws IOException;
 
-    String inferBinaryName(JavaFileObject object);
 }

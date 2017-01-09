@@ -1,6 +1,8 @@
 package com.github.ykiselev.compilation;
 
+import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.SourceStorage;
+import com.google.common.collect.ImmutableList;
 
 import javax.tools.*;
 import java.io.IOException;
@@ -67,7 +69,7 @@ public interface ClassFactory {
                         out,
                         fileManager,
                         this::report,
-                        null,//ImmutableList.of("-classpath", System.getProperty("java.class.path")),
+                        ImmutableList.of("-proc:none"),//ImmutableList.of("-classpath", System.getProperty("java.class.path")),
                         null,
                         compilationUnits
                 );
