@@ -3,6 +3,7 @@ package com.github.ykiselev;
 import com.github.ykiselev.compilation.ClassStorage;
 import com.github.ykiselev.compilation.JavaSource;
 import com.github.ykiselev.compilation.StorageBackedJavaFileManager;
+import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,6 +11,7 @@ import javax.tools.*;
 import java.io.File;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
@@ -47,6 +49,7 @@ public final class CompilerApp {
                 );
                 StorageBackedJavaFileManager forwardingFileManager = new StorageBackedJavaFileManager(
                         fileManager,
+                        new DiskSourceStorage(Paths.get(".")),
                         storage
                 )
         ) {

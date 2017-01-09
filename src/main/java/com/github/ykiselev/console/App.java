@@ -2,6 +2,7 @@ package com.github.ykiselev.console;
 
 import com.github.ykiselev.compilation.ClassFactory;
 import com.github.ykiselev.compilation.JavaSource;
+import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import com.github.ykiselev.console.CommandProcessor.CommandHandler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -22,7 +23,7 @@ public final class App {
 
     private final BufferedReader input;
 
-    private final ClassFactory classFactory;
+    private ClassFactory classFactory;
 
     private Path base = Paths.get("./src/main/scripts");
 
@@ -44,6 +45,7 @@ public final class App {
         Preconditions.checkArgument(file.exists(), "Non-existing directory: " + path);
         Preconditions.checkArgument(file.isDirectory(), "Not a directory: " + path);
         this.base = path;
+        initClassFactory(this.base);
     }
 
     private void onClassName(String[] args) {
@@ -68,13 +70,18 @@ public final class App {
         System.exit(0);
     }
 
-    private App(BufferedReader input) {
-        this.input = Objects.requireNonNull(input);
+    private void initClassFactory(Path base) {
         this.classFactory = new ClassFactory.Default(
                 getClass().getClassLoader(),
+                new DiskSourceStorage(base),
                 StandardCharsets.UTF_8,
                 new OutputStreamWriter(System.out)
         );
+    }
+
+    private App(BufferedReader input) {
+        this.input = Objects.requireNonNull(input);
+        initClassFactory(base);
     }
 
     public static void main(String[] args) throws IOException {
@@ -93,14 +100,14 @@ public final class App {
             } catch (IllegalArgumentException ex) {
                 System.err.println(ex.getMessage());
             } catch (Exception ex) {
-                System.err.println(ex.toString());
+                ex.printStackTrace(System.err);
             }
         }
     }
 
     private JavaFileObject source(String className) {
         return new JavaSource(
-                base.resolve(className.replace(".", "/") + ".java").toUri(),
+                base.resolve(className.replace(".", "/") + JavaFileObject.Kind.SOURCE.extension).normalize().toUri(),
                 JavaFileObject.Kind.SOURCE
         );
     }

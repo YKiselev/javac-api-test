@@ -1,5 +1,7 @@
 package org.xyz;
 
+import org.xyz.Bar;
+
 import java.util.function.Function;
 
 /**
@@ -9,7 +11,8 @@ public final class Foo implements Function<String, String> {
 
     @Override
     public String apply(String s) {
-        return "Hello, user at " + new java.util.Date();
+        final Bar bar = new Bar(this);
+        return "Hello, user!\nIt's " + new java.util.Date() + ", btw look at this: " + com.github.ykiselev.Xyz.VALUE + ", and I've got " + bar;
     }
 
 
