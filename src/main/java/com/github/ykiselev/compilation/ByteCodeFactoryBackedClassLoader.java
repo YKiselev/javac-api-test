@@ -1,6 +1,6 @@
 package com.github.ykiselev.compilation;
 
-import com.github.ykiselev.compilation.compiled.ByteCodeFactory;
+import com.github.ykiselev.compilation.compiled.ByteCodeStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -16,16 +16,16 @@ public final class ByteCodeFactoryBackedClassLoader extends SecureClassLoader {
 
     private final Logger logger = LogManager.getLogger(getClass());
 
-    private final ByteCodeFactory byteCodeFactory;
+    private final ByteCodeStorage byteCodeStorage;
 
-    public ByteCodeFactoryBackedClassLoader(ClassLoader parent, ByteCodeFactory byteCodeFactory) {
+    public ByteCodeFactoryBackedClassLoader(ClassLoader parent, ByteCodeStorage byteCodeStorage) {
         super(parent);
-        this.byteCodeFactory = Objects.requireNonNull(byteCodeFactory);
+        this.byteCodeStorage = Objects.requireNonNull(byteCodeStorage);
     }
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-        final ByteBuffer buffer = byteCodeFactory.get(name);
+        final ByteBuffer buffer = byteCodeStorage.get(name);
         if (buffer != null) {
             logger.debug("Loading {}, {} bytes...", () -> name, buffer::remaining);
             return super.defineClass(name, buffer, (ProtectionDomain) null);

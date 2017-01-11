@@ -6,25 +6,26 @@ import javax.tools.SimpleJavaFileObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
+import java.util.Objects;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 public final class UrlJavaSource extends SimpleJavaFileObject {
 
-    public UrlJavaSource(URI uri, Kind kind) {
+    private final Charset charset;
+
+    public UrlJavaSource(URI uri, Kind kind, Charset charset) {
         super(uri, kind);
+        this.charset = Objects.requireNonNull(charset);
     }
 
     @Override
     public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-        try (InputStream is = open(toUri())) {
-            return IOUtils.toString(is, StandardCharsets.UTF_8);
+        try (InputStream is = toUri().toURL().openStream()) {
+            return IOUtils.toString(is, charset);
         }
     }
 
-    private InputStream open(URI uri) throws IOException {
-        return uri.toURL().openStream();
-    }
 }

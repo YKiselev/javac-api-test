@@ -1,13 +1,13 @@
 package com.github.ykiselev.console;
 
 import com.github.ykiselev.compilation.ClassFactory;
-import com.github.ykiselev.compilation.source.UrlJavaSource;
+import com.github.ykiselev.compilation.CompilationException;
+import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import com.github.ykiselev.console.CommandProcessor.CommandHandler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-import javax.tools.JavaFileObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -38,6 +38,8 @@ public final class App {
                     .build()
     );
 
+    private DiskSourceStorage sourceStorage;
+
     private void onScripts(String[] args) {
         Preconditions.checkArgument(args.length >= 2, "Need directory!");
         final Path path = Paths.get(args[1]);
@@ -56,7 +58,10 @@ public final class App {
         final String className = args.length >= 2 ? args[1] : this.className;
         final ClassLoader classLoader = classFactory.compile(
                 Collections.singletonList(
-                        source(className)
+                        sourceStorage.resolve(className)
+                ),
+                new ClassStorage.Default(
+                        getClass().getClassLoader()
                 )
         );
         final Class<?> clazz = classLoader.loadClass(className);
@@ -71,10 +76,12 @@ public final class App {
     }
 
     private void initClassFactory(Path base) {
+        this.sourceStorage = new DiskSourceStorage(
+                base,
+                StandardCharsets.UTF_8
+        );
         this.classFactory = new ClassFactory.Default(
-                getClass().getClassLoader(),
-                new DiskSourceStorage(base),
-                StandardCharsets.UTF_8,
+                sourceStorage,
                 new OutputStreamWriter(System.out)
         );
     }
@@ -97,18 +104,11 @@ public final class App {
         while ((line = input.readLine()) != null) {
             try {
                 processor.execute(line);
-            } catch (IllegalArgumentException ex) {
+            } catch (CompilationException ex) {
                 System.err.println(ex.getMessage());
             } catch (Exception ex) {
                 ex.printStackTrace(System.err);
             }
         }
-    }
-
-    private JavaFileObject source(String className) {
-        return new UrlJavaSource(
-                base.resolve(className.replace(".", "/") + JavaFileObject.Kind.SOURCE.extension).normalize().toUri(),
-                JavaFileObject.Kind.SOURCE
-        );
     }
 }

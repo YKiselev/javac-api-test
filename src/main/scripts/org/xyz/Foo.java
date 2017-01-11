@@ -15,7 +15,6 @@ public final class Foo implements Function<String, String> {
         return "Hello, user!\nIt's " + new java.util.Date() + ", btw look at this: " + com.github.ykiselev.Xyz.VALUE + ", and I've got " + bar;
     }
 
-
     public class A {
 
         private final int value;

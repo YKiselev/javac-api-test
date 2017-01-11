@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public interface ByteCodeFactory {
+public interface ByteCodeStorage {
 
     ByteBuffer get(String className);
 }

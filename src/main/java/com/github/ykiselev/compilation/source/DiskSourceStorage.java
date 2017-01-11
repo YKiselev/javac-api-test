@@ -6,6 +6,7 @@ import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaFileObject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,9 +22,12 @@ public final class DiskSourceStorage implements SourceStorage {
 
     private final Path base;
 
-    public DiskSourceStorage(Path base) {
+    private final Charset charset;
+
+    public DiskSourceStorage(Path base, Charset charset) {
         this.base = Objects.requireNonNull(base).toAbsolutePath()
                 .normalize();
+        this.charset = Objects.requireNonNull(charset);
     }
 
     @Override
@@ -55,7 +59,8 @@ public final class DiskSourceStorage implements SourceStorage {
         return new FileObject(
                 new UrlJavaSource(
                         path.toUri(),
-                        JavaFileObject.Kind.SOURCE
+                        JavaFileObject.Kind.SOURCE,
+                        charset
                 )
         );
     }

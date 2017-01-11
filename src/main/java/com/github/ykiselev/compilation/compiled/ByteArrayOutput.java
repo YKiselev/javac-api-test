@@ -6,12 +6,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.function.Supplier;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class ByteArrayOutput extends SimpleJavaFileObject implements Supplier<ByteBuffer> {
+public final class ByteArrayOutput extends SimpleJavaFileObject implements WritableJavaFileObject {
 
     private final ByteArrayOutputStream os = new ByteArrayOutputStream();
 

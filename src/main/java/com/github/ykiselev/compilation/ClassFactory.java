@@ -1,13 +1,13 @@
 package com.github.ykiselev.compilation;
 
 import com.github.ykiselev.compilation.compiled.ClassStorage;
+import com.github.ykiselev.compilation.compiled.JavaFileObjectFactory;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.collect.ImmutableList;
 
 import javax.tools.*;
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -16,7 +16,7 @@ import java.util.Objects;
  */
 public interface ClassFactory {
 
-    ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits) throws IOException;
+    ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException;
 
     /**
      *
@@ -25,60 +25,51 @@ public interface ClassFactory {
 
         private final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 
-        private final ClassLoader parent;
-
-        private final Charset charset;
-
         private final Writer out;
 
         private final SourceStorage sourceStorage;
 
-        public Default(ClassLoader parent, SourceStorage sourceStorage, Charset charset, Writer out) {
-            this.parent = Objects.requireNonNull(parent);
-            this.charset = Objects.requireNonNull(charset);
+        public Default(SourceStorage sourceStorage, Writer out) {
             this.sourceStorage = Objects.requireNonNull(sourceStorage);
             this.out = out;
         }
 
-        public Default(ClassLoader parent, Charset charset, SourceStorage sourceStorage) {
-            this(parent, sourceStorage, charset, null);
+        public Default(SourceStorage sourceStorage) {
+            this(sourceStorage, null);
         }
 
         private JavaFileManager createFileManager(ClassStorage storage) throws IOException {
-            final StandardJavaFileManager stdFileManager = compiler.getStandardFileManager(
-                    this::report,
-                    null,
-                    charset
-            );
-//            stdFileManager.setLocation(
-//                    StandardLocation.SOURCE_PATH,
-//                    Collections.singletonList(new File("D:\\Projects\\Java\\compile-java\\src\\main\\scripts"))
-//            );
             return new StorageBackedJavaFileManager(
-                    stdFileManager,
+                    compiler.getStandardFileManager(
+                            this::report,
+                            null,
+                            null
+                    ),
                     sourceStorage,
+                    new JavaFileObjectFactory.Default(),
                     storage
             );
         }
 
         @Override
-        public ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits) throws IOException {
-            final ClassStorage.Default storage = new ClassStorage.Default(parent);
-            try (JavaFileManager fileManager = createFileManager(storage)) {
+        public ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException {
+            try (JavaFileManager fileManager = createFileManager(classStorage)) {
                 final JavaCompiler.CompilationTask task = compiler.getTask(
                         out,
                         fileManager,
                         this::report,
-                        ImmutableList.of("-proc:none"),//ImmutableList.of("-classpath", System.getProperty("java.class.path")),
+                        ImmutableList.of("-proc:none"),
                         null,
                         compilationUnits
                 );
                 if (task.call() != Boolean.TRUE) {
                     out.flush();
-                    throw new IllegalStateException("Compilation failed!");
+                    throw new CompilationException("Compilation failed! See log for details.");
                 }
+            } catch (IOException ex) {
+                throw new CompilationException(ex);
             }
-            return storage.classLoader();
+            return classStorage.classLoader();
         }
 
         private void report(Diagnostic<? extends JavaFileObject> d) {
