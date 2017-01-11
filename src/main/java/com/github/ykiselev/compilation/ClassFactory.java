@@ -1,7 +1,6 @@
 package com.github.ykiselev.compilation;
 
 import com.github.ykiselev.compilation.compiled.ClassStorage;
-import com.github.ykiselev.compilation.compiled.JavaFileObjectFactory;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.collect.ImmutableList;
 
@@ -46,7 +45,6 @@ public interface ClassFactory {
                             null
                     ),
                     sourceStorage,
-                    new JavaFileObjectFactory.Default(),
                     storage
             );
         }

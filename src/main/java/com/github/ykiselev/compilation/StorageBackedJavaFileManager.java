@@ -1,8 +1,6 @@
 package com.github.ykiselev.compilation;
 
 import com.github.ykiselev.compilation.compiled.ClassStorage;
-import com.github.ykiselev.compilation.compiled.JavaFileObjectFactory;
-import com.github.ykiselev.compilation.compiled.WritableJavaFileObject;
 import com.github.ykiselev.compilation.source.HasBinaryName;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.collect.Iterables;
@@ -30,13 +28,9 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
 
     private final SourceStorage sourceStorage;
 
-    private final JavaFileObjectFactory fileObjectFactory;
-
-    public StorageBackedJavaFileManager(JavaFileManager fileManager, SourceStorage sourceStorage,
-                                        JavaFileObjectFactory fileObjectFactory, ClassStorage classStorage) {
+    public StorageBackedJavaFileManager(JavaFileManager fileManager, SourceStorage sourceStorage, ClassStorage classStorage) {
         super(fileManager);
         this.sourceStorage = Objects.requireNonNull(sourceStorage);
-        this.fileObjectFactory = Objects.requireNonNull(fileObjectFactory);
         this.classStorage = Objects.requireNonNull(classStorage);
     }
 
@@ -70,9 +64,8 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
         logger.debug("Requested {} for {} : {}, {}", location, kind, className, sibling);
-        final WritableJavaFileObject fileObject = fileObjectFactory.create(location, className, kind, sibling);
+        final JavaFileObject fileObject = classStorage.create(location, className, kind, sibling);
         logger.debug("Created {}", fileObject);
-        classStorage.put(className, fileObject);
         return fileObject;
     }
 

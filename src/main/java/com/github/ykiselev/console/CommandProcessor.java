@@ -23,6 +23,12 @@ public final class CommandProcessor {
 
     private final Map<String, CommandHandler> handlers;
 
+    /**
+     * @return immutable map of supported commands
+     */
+    public Map<String, CommandHandler> handlers() {
+        return handlers;
+    }
 
     public CommandProcessor(Map<String, CommandHandler> handlers) {
         this.handlers = ImmutableMap.copyOf(handlers);

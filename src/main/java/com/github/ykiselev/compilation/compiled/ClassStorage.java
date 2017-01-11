@@ -2,6 +2,11 @@ package com.github.ykiselev.compilation.compiled;
 
 import com.github.ykiselev.compilation.ByteCodeFactoryBackedClassLoader;
 
+import javax.tools.FileObject;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,7 +17,18 @@ import java.util.function.Supplier;
  */
 public interface ClassStorage {
 
-    void put(String className, Supplier<ByteBuffer> value);
+    /**
+     * Creates {@link JavaFileObject} and associates it with given className
+     *
+     * @param location  the location
+     * @param className the class name
+     * @param kind      the kind of file object, must be one of {@link JavaFileObject.Kind#SOURCE SOURCE} or {@link JavaFileObject.Kind#CLASS CLASS}
+     * @param sibling   a file object to be used as hint for placement;
+     *                  might be {@code null}
+     * @return Writable {@link JavaFileObject} to store byte code of compiled class
+     * @throws IOException if I/O error occurred
+     */
+    JavaFileObject create(JavaFileManager.Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException;
 
     ClassLoader classLoader();
 
@@ -21,7 +37,7 @@ public interface ClassStorage {
      */
     final class Default implements ClassStorage {
 
-        private final Map<String, Supplier<ByteBuffer>> map = new ConcurrentHashMap<>();
+        private final Map<String, ByteArrayOutput> map = new ConcurrentHashMap<>();
 
         private final ByteCodeFactoryBackedClassLoader classLoader;
 
@@ -38,8 +54,14 @@ public interface ClassStorage {
         }
 
         @Override
-        public void put(String className, Supplier<ByteBuffer> value) {
-            map.put(className, value);
+        public JavaFileObject create(JavaFileManager.Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
+            return map.computeIfAbsent(
+                    className,
+                    s -> new ByteArrayOutput(
+                            URI.create("bytes:///" + className),
+                            kind
+                    )
+            );
         }
 
         @Override

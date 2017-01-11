@@ -35,8 +35,18 @@ public final class App {
                     .put("call", this::onCall)
                     .put("scripts", this::onScripts)
                     .put("className", this::onClassName)
+                    .put("help", this::onHelp)
                     .build()
     );
+
+    private void onHelp(String[] args) {
+        System.out.println("Supported commands:");
+        processor.handlers()
+                .keySet()
+                .stream()
+                .sorted()
+                .forEach(cmd -> System.out.println("  " + cmd));
+    }
 
     private DiskSourceStorage sourceStorage;
 
@@ -100,6 +110,8 @@ public final class App {
     }
 
     private void run() throws IOException {
+        onHelp(new String[0]);
+
         String line;
         while ((line = input.readLine()) != null) {
             try {
