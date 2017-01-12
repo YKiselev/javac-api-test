@@ -62,6 +62,12 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     }
 
     @Override
+    public FileObject getFileForOutput(Location location, String packageName, String relativeName, FileObject sibling) throws IOException {
+        // Not expected to be called
+        throw new UnsupportedOperationException("Not supported!");
+    }
+
+    @Override
     public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
         logger.debug("Requested {} for {} : {}, {}", location, kind, className, sibling);
         final JavaFileObject fileObject = classStorage.create(location, className, kind, sibling);
