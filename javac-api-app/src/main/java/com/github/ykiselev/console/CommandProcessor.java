@@ -1,6 +1,7 @@
 package com.github.ykiselev.console;
 
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ public final class CommandProcessor {
 
     private final Map<String, CommandHandler> handlers;
 
+    private final CommandHandler defaultHandler;
+
     /**
      * @return immutable map of supported commands
      */
@@ -30,8 +33,15 @@ public final class CommandProcessor {
         return handlers;
     }
 
-    public CommandProcessor(Map<String, CommandHandler> handlers) {
+    public CommandProcessor(Map<String, CommandHandler> handlers, CommandHandler defaultHandler) {
         this.handlers = ImmutableMap.copyOf(handlers);
+        this.defaultHandler = defaultHandler != null
+                ? defaultHandler
+                : this::defaultHandler;
+    }
+
+    private void defaultHandler(String[] args) {
+        throw new IllegalArgumentException("Unknown command: " + args[0]);
     }
 
     private String[] split(String line) {
@@ -61,12 +71,10 @@ public final class CommandProcessor {
     public void execute(String line) throws Exception {
         final String[] args = split(line);
         if (args.length > 0) {
-            final CommandHandler handler = handlers.get(args[0]);
-            if (handler != null) {
-                handler.handle(args);
-            } else {
-                throw new IllegalArgumentException("Unknown command: " + args[0]);
-            }
+            ObjectUtils.firstNonNull(
+                    handlers.get(args[0]),
+                    defaultHandler
+            ).handle(args);
         }
     }
 }
