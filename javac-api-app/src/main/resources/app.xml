@@ -7,23 +7,10 @@
        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
         http://ykiselev.github.com/schema/javac javac.xsd">
 
-    <bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">
-        <constructor-arg type="java.lang.String" value="${scripts.base.folder}"/>
-        <constructor-arg value="UTF-8"/>
-    </bean>
-    <bean id="classFactory" class="com.github.ykiselev.compilation.ClassFactory.Default">
-        <constructor-arg ref="sourceStorage"/>
-        <constructor-arg type="java.io.Writer">
-            <bean class="java.io.OutputStreamWriter">
-                <constructor-arg value="#{T(System).out}"/>
-            </bean>
-        </constructor-arg>
-    </bean>
-
     <javac:bean id="javaBean" script-source="script:org/xyz/Calc.java">
         <property name="tag" value="123"/>
     </javac:bean>
 
-    <lang:groovy id="groovyPredicate" script-source="script:org/xyz/Predicate.groovy"/>
+    <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy"/>
 
 </beans>

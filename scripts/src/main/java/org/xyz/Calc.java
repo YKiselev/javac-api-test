@@ -27,6 +27,8 @@ public final class Calc implements Function<Iterable<Position>, Component> {
 
     @Override
     public Component apply(Iterable<Position> positions) {
+        System.out.println("Tag is " + tag);
+
         final List<Group> groups = StreamSupport.stream(positions.spliterator(), false)
                 .filter(p -> !StringUtils.equals(p.getType(), "A"))
                 .collect(Collectors.groupingBy(Position::getType))

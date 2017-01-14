@@ -6,10 +6,10 @@ import groovy.transform.CompileStatic
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 @CompileStatic
-class Predicate implements java.util.function.Predicate<String> {
-
+class GroovyBean implements Runnable {
     @Override
-    boolean test(String s) {
-        s?.length() > 3
+    void run() {
+        println 'Hello from Groovy class!'
     }
+
 }
