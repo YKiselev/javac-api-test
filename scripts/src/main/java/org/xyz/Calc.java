@@ -3,9 +3,10 @@ package org.xyz;
 import com.github.ykiselev.model.Component;
 import com.github.ykiselev.model.Group;
 import com.github.ykiselev.model.Position;
-import org.apache.commons.lang3.StringUtils;
+import com.google.common.collect.ImmutableSet;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -15,22 +16,20 @@ import java.util.stream.StreamSupport;
  */
 public final class Calc implements Function<Iterable<Position>, Component> {
 
-    private int tag;
+    private Set<String> badTypes = ImmutableSet.of("Z");
 
-    public int getTag() {
-        return tag;
+    public Set<String> getBadTypes() {
+        return badTypes;
     }
 
-    public void setTag(int tag) {
-        this.tag = tag;
+    public void setBadTypes(Set<String> badTypes) {
+        this.badTypes = badTypes;
     }
 
     @Override
     public Component apply(Iterable<Position> positions) {
-        System.out.println("Tag is " + tag);
-
         final List<Group> groups = StreamSupport.stream(positions.spliterator(), false)
-                .filter(p -> !StringUtils.equals(p.getType(), "A"))
+                .filter(p -> !badTypes.contains(p.getType()))
                 .collect(Collectors.groupingBy(Position::getType))
                 .entrySet()
                 .stream()
@@ -39,7 +38,7 @@ public final class Calc implements Function<Iterable<Position>, Component> {
         return new Component(
                 groups.stream()
                         .map(Group::getName)
-                        .collect(Collectors.joining("+")),
+                        .collect(Collectors.joining("|")),
                 groups
         );
     }

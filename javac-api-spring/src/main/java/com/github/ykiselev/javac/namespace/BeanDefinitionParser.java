@@ -1,6 +1,7 @@
 package com.github.ykiselev.javac.namespace;
 
 import com.github.ykiselev.javac.factories.JavacBeanFactory;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
@@ -22,10 +23,6 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
 
     @Override
     protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-        builder.addConstructorArgValue(element.getAttribute("targetClass"));
-        builder.addConstructorArgValue(element.getAttribute("script-source")); // inject as resource
-        builder.addConstructorArgValue(element.getAttribute("script-source")); // inject as uri to infer class name
-
         final BeanDefinitionBuilder properties = BeanDefinitionBuilder.rootBeanDefinition(LinkedHashMap.class);
         for (Element child : DomUtils.getChildElements(element)) {
             parserContext.getDelegate().parsePropertyElement(child, properties.getRawBeanDefinition());
@@ -39,7 +36,11 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
                 .getPropertyValueList()
                 .forEach(e -> map.put(e.getName(), e.getValue()));
 
-        builder.addConstructorArgValue(map);
+        final ConstructorArgumentValues args = builder.getRawBeanDefinition().getConstructorArgumentValues();
+        args.addIndexedArgumentValue(0, element.getAttribute("targetClass"));
+        args.addIndexedArgumentValue(1, element.getAttribute("script-source")); // inject as resource
+        args.addIndexedArgumentValue(2, element.getAttribute("script-source")); // inject as uri to infer class name
+        args.addIndexedArgumentValue(3, map);
     }
 
 }

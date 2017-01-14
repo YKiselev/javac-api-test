@@ -3,14 +3,58 @@
        xmlns:javac="http://ykiselev.github.com/schema/javac"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:lang="http://www.springframework.org/schema/lang"
+       xmlns:util="http://www.springframework.org/schema/util"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
        http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang.xsd
-        http://ykiselev.github.com/schema/javac javac.xsd">
+       http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
+        http://ykiselev.github.com/schema/javac javac.xsd" default-lazy-init="true">
 
-    <javac:bean id="javaBean" script-source="script:org/xyz/Calc.java">
-        <property name="tag" value="123"/>
+    <javac:bean id="javaBean1" script-source="script:org/xyz/Calc.java">
+        <property name="badTypes">
+            <set>
+                <value>A</value>
+                <value>B</value>
+                <value>C</value>
+            </set>
+        </property>
     </javac:bean>
 
-    <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy"/>
+    <javac:bean id="javaBean2" script-source="script:org/xyz/Calc.java">
+        <property name="badTypes">
+            <set>
+                <value>B</value>
+                <value>D</value>
+            </set>
+        </property>
+    </javac:bean>
+
+    <javac:bean id="javaBean3" script-source="script:org/xyz/Calc.java">
+        <property name="badTypes">
+            <set>
+                <value>A</value>
+                <value>E</value>
+                <value>F</value>
+            </set>
+        </property>
+    </javac:bean>
+
+    <javac:bean id="javaBean4" script-source="script:org/xyz/Calc.java">
+        <property name="badTypes">
+            <set>
+                <value>Z</value>
+                <value>F</value>
+                <value>B</value>
+            </set>
+        </property>
+    </javac:bean>
+
+    <util:list id="javaBeans">
+        <ref bean="javaBean1"/>
+        <ref bean="javaBean2"/>
+        <ref bean="javaBean3"/>
+        <ref bean="javaBean4"/>
+    </util:list>
+
+    <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy" />
 
 </beans>

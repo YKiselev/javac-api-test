@@ -29,7 +29,7 @@ public final class Group {
     public String toString() {
         return "Group{" +
                 "name='" + name + '\'' +
-                ", positions=" + positions +
+                ", positions: " + (positions != null ? positions.size() : null) +
                 '}';
     }
 

@@ -1,42 +1,46 @@
 package com.github.ykiselev.spring;
 
 import com.github.ykiselev.AnyObject;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 public final class SpringApp {
 
+    private final Logger logger = LogManager.getLogger(getClass());
+
     public static void main(String[] args) {
+        new SpringApp().run();
+    }
+
+    private void run() {
+        logger.info("Starting...");
         try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(new String[]{"/app.xml"}, false)) {
             ctx.addProtocolResolver(new ScriptProtocolResolver(Paths.get(System.getProperty("scripts.base.folder"))));
-            ctx.addBeanFactoryPostProcessor(new BeanDefinitionRegistryPostProcessor() {
-                @Override
-                public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-                    //final BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition()
-                    //registry.registerBeanDefinition("", new RootBeanDefinition());
-                }
-
-                @Override
-                public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-                }
-            });
             ctx.refresh();
 
-            new AnyObject(ctx.getBean("javaBean"))
-                    .run();
+            logger.info("Getting beans...");
+            final List<Object> javaBeans = ctx.getBean("javaBeans", List.class);
+            logger.info("Running beans...");
+            for (Object bean : javaBeans) {
+                new AnyObject(bean)
+                        .run();
+            }
 
+//            new AnyObject(ctx.getBean("javaBean"))
+//                    .run();
+
+            logger.info("And groovy bean...");
             new AnyObject(ctx.getBean("groovyBean"))
                     .run();
+
+            logger.info("Done!");
         }
     }
 }
