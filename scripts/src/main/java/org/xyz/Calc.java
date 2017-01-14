@@ -15,6 +15,16 @@ import java.util.stream.StreamSupport;
  */
 public final class Calc implements Function<Iterable<Position>, Component> {
 
+    private int tag;
+
+    public int getTag() {
+        return tag;
+    }
+
+    public void setTag(int tag) {
+        this.tag = tag;
+    }
+
     @Override
     public Component apply(Iterable<Position> positions) {
         final List<Group> groups = StreamSupport.stream(positions.spliterator(), false)

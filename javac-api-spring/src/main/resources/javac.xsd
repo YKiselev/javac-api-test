@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns="http://ykiselev.github.com/schema/javac"
+            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:beans="http://www.springframework.org/schema/beans"
+            xmlns:tool="http://www.springframework.org/schema/tool"
+            targetNamespace="http://ykiselev.github.com/schema/javac"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified">
+
+    <xsd:import namespace="http://www.springframework.org/schema/beans"/>
+
+    <xsd:element name="bean">
+        <xsd:complexType mixed="true">
+            <xsd:complexContent>
+                <xsd:extension base="beans:identifiedType">
+                    <xsd:choice minOccurs="0" maxOccurs="1">
+                        <xsd:element ref="beans:bean"/>
+                        <xsd:element ref="beans:ref"/>
+                        <xsd:element ref="beans:idref"/>
+                        <xsd:element ref="beans:value"/>
+                        <xsd:element ref="beans:null"/>
+                        <xsd:any namespace="##other" processContents="strict"/>
+                    </xsd:choice>
+                    <xsd:attribute name="targetClass" type="xsd:string" use="optional"/>
+                    <xsd:attribute name="script-source" type="xsd:string" use="required"/>
+                </xsd:extension>
+            </xsd:complexContent>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>

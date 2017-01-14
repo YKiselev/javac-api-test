@@ -1,14 +1,12 @@
 package com.github.ykiselev.console;
 
-import com.github.ykiselev.Positions;
+import com.github.ykiselev.AnyObject;
 import com.github.ykiselev.compilation.ClassFactory;
 import com.github.ykiselev.compilation.CompilationException;
 import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import com.github.ykiselev.compilation.source.StringJavaSource;
 import com.github.ykiselev.console.CommandProcessor.CommandHandler;
-import com.github.ykiselev.model.Component;
-import com.github.ykiselev.model.Position;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.io.IOUtils;
@@ -21,16 +19,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 public final class App {
-
-    private static final String DEF_RUNNABLE = "";
 
     private final BufferedReader input;
 
@@ -107,7 +101,7 @@ public final class App {
 
     private void onBase(String[] args) {
         Preconditions.checkArgument(args.length >= 2, "Need directory!");
-        final Path path = Paths.get(args[1]).toAbsolutePath().normalize();
+        final Path path = Paths.get(args[1]);
         final File file = path.toFile();
         Preconditions.checkArgument(file.exists(), "Non-existing path: " + path);
         Preconditions.checkArgument(file.isDirectory(), "Not a directory: " + path);
@@ -123,22 +117,8 @@ public final class App {
     }
 
     private void runClass(Class<?> clazz) throws Exception {
-        final Object obj = clazz.newInstance();
-        if (Function.class.isAssignableFrom(clazz)) {
-            final Function<Iterable<Position>, Component> function = Function.class.cast(obj);
-            final Component component = function.apply(
-                    Positions.prepare(10_000)
-            );
-            System.out.println("=================================");
-            System.out.println(component);
-            System.out.println("=================================");
-        } else if (Runnable.class.isAssignableFrom(clazz)) {
-            ((Runnable) obj).run();
-        } else if (Callable.class.isAssignableFrom(clazz)) {
-            System.out.println("=================================");
-            System.out.println(((Callable) obj).call());
-            System.out.println("=================================");
-        }
+        new AnyObject(clazz.newInstance())
+                .run();
     }
 
     private void onRun(String[] args) throws Exception {

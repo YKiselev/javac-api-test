@@ -30,6 +30,10 @@ public final class DiskSourceStorage implements SourceStorage {
         this.charset = Objects.requireNonNull(charset);
     }
 
+    public DiskSourceStorage(String base, Charset charset) {
+        this(Paths.get(base), charset);
+    }
+
     @Override
     public Iterable<JavaFileObject> list(String packageName, boolean recurse) throws IOException {
         final Path from = base.resolve(packageName.replace(".", "/")).normalize();
