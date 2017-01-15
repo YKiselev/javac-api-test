@@ -1,7 +1,11 @@
 package com.github.ykiselev.javac.namespace;
 
+import com.github.ykiselev.javac.UriScriptSource;
 import com.github.ykiselev.javac.factories.JavacBeanFactory;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
@@ -9,6 +13,7 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
+import java.net.URI;
 import java.util.LinkedHashMap;
 
 /**
@@ -23,6 +28,8 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
 
     @Override
     protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+        final String classFactoryBean = ClassFactoryFactoryBean.register(parserContext.getRegistry());
+
         final BeanDefinitionBuilder properties = BeanDefinitionBuilder.rootBeanDefinition(LinkedHashMap.class);
         for (Element child : DomUtils.getChildElements(element)) {
             parserContext.getDelegate().parsePropertyElement(child, properties.getRawBeanDefinition());
@@ -36,11 +43,26 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
                 .getPropertyValueList()
                 .forEach(e -> map.put(e.getName(), e.getValue()));
 
+        final String scriptSource = element.getAttribute("script-source");
+        final UriScriptSource source = getSource(scriptSource, parserContext);
         final ConstructorArgumentValues args = builder.getRawBeanDefinition().getConstructorArgumentValues();
-        args.addIndexedArgumentValue(0, element.getAttribute("targetClass"));
-        args.addIndexedArgumentValue(1, element.getAttribute("script-source")); // inject as resource
-        args.addIndexedArgumentValue(2, element.getAttribute("script-source")); // inject as uri to infer class name
-        args.addIndexedArgumentValue(3, map);
+        args.addIndexedArgumentValue(0, new RuntimeBeanReference(classFactoryBean));
+        args.addIndexedArgumentValue(1, source);
+        args.addIndexedArgumentValue(2, map);
     }
 
+    private UriScriptSource getSource(String scriptSource, ParserContext context) {
+        if (StringUtils.isEmpty(scriptSource)) {
+            context.getReaderContext().error("script-source cannot be empty!", null);
+        }
+        return new UriScriptSource(
+                context.getReaderContext()
+                        .getResourceLoader()
+                        .getResource(scriptSource),
+                FilenameUtils.removeExtension(
+                        URI.create(scriptSource)
+                                .getSchemeSpecificPart()
+                ).replaceAll("\\\\|/", "\\.")
+        );
+    }
 }

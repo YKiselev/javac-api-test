@@ -1,44 +1,48 @@
 package com.github.ykiselev.javac.factories;
 
 import com.github.ykiselev.compilation.ClassFactory;
+import com.github.ykiselev.compilation.CompilationException;
 import com.github.ykiselev.compilation.compiled.ClassStorage;
-import com.github.ykiselev.compilation.source.SourceStorage;
 import com.github.ykiselev.compilation.source.StringJavaSource;
-import com.github.ykiselev.javac.spi.SourceStorageFactory;
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.FactoryBean;
-import org.springframework.core.io.Resource;
-import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.config.AbstractFactoryBean;
+import org.springframework.scripting.ScriptSource;
 
-import javax.tools.JavaFileObject;
-import java.io.OutputStreamWriter;
+import javax.tools.JavaFileObject.Kind;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.ServiceLoader;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class JavacBeanFactory<I> implements FactoryBean<I> {
+public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
 
-    private final Class<I> targetClass;
+    private final ClassFactory classFactory;
 
-    private final Resource resource;
-
-    private final URI uri;
+    private final ScriptSource resource;
 
     private final Map<String, Object> properties;
 
-    public JavacBeanFactory(Class<I> targetClass, Resource resource, URI uri, Map<String, Object> properties) {
-        this.targetClass = targetClass;
+    public JavacBeanFactory(ClassFactory classFactory, ScriptSource resource, Map<String, Object> properties) {
+        this.classFactory = Objects.requireNonNull(classFactory);
         this.resource = Objects.requireNonNull(resource);
-        this.uri = Objects.requireNonNull(uri);
         this.properties = Objects.requireNonNull(properties);
+    }
+
+    @Override
+    protected I createInstance() throws Exception {
+        final String className = resource.suggestedClassName();
+        final ClassLoader classLoader = compile(
+                className,
+                resource.getScriptAsString()
+        );
+        final Object obj = classLoader.loadClass(className)
+                .newInstance();
+        setProperties(obj);
+        return (I) obj;
     }
 
     private void setProperties(Object object) throws InvocationTargetException, IllegalAccessException {
@@ -48,39 +52,12 @@ public final class JavacBeanFactory<I> implements FactoryBean<I> {
         BeanUtils.populate(object, properties);
     }
 
-    private SourceStorage createSourceStorage() {
-        final ServiceLoader<SourceStorageFactory> loader = ServiceLoader.load(SourceStorageFactory.class);
-        for (SourceStorageFactory factory : loader) {
-            return factory.create();
-        }
-        throw new IllegalStateException("Storage factory not found!");
-    }
-
-    private String createClassName(String source) {
-        String result = uri.getSchemeSpecificPart().replaceAll("\\\\|/", ".");
-        if (StringUtils.endsWithIgnoreCase(result, ".java")) {
-            result = result.substring(0, result.length() - 5);
-        }
-        return result;
-    }
-
-    @Override
-    public I getObject() throws Exception {
-        final String source = IOUtils.toString(
-                resource.getInputStream(),
-                StandardCharsets.UTF_8
-        );
-        final String className = createClassName(source);
-        final SourceStorage sourceStorage = createSourceStorage();
-        final ClassFactory classFactory = new ClassFactory.Default(
-                sourceStorage,
-                new OutputStreamWriter(System.out)
-        );
-        final ClassLoader classLoader = classFactory.compile(
+    private ClassLoader compile(String className, String source) throws CompilationException {
+        return classFactory.compile(
                 Collections.singletonList(
                         new StringJavaSource(
-                                URI.create("string:///" + uri.getSchemeSpecificPart()),
-                                JavaFileObject.Kind.SOURCE,
+                                URI.create("resource:///" + className.replaceAll("\\.", "/") + Kind.SOURCE.extension),
+                                Kind.SOURCE,
                                 source
                         )
                 ),
@@ -88,19 +65,11 @@ public final class JavacBeanFactory<I> implements FactoryBean<I> {
                         getClass().getClassLoader()
                 )
         );
-        final Object obj = classLoader.loadClass(className)
-                .newInstance();
-        setProperties(obj);
-        return (I) obj;
     }
 
     @Override
     public Class<?> getObjectType() {
-        return targetClass;
+        return null;
     }
 
-    @Override
-    public boolean isSingleton() {
-        return false;
-    }
 }
