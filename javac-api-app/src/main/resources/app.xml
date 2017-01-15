@@ -53,6 +53,8 @@
         <ref bean="javaBean2"/>
         <ref bean="javaBean3"/>
         <ref bean="javaBean4"/>
+        <javac:bean script-source="script:org/xyz/Foo.java"/>
+        <javac:bean script-source="script:org/Foo.java"/>
     </util:list>
 
     <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy" />

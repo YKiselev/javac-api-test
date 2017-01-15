@@ -1,13 +1,17 @@
-package org.xyz;
+package org;
+
+import javax.tools.SimpleJavaFileObject;
 
 /**
+ * Another Foo to test {@link SimpleJavaFileObject#isNameCompatible(java.lang.String, javax.tools.JavaFileObject.Kind)}
+ *
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 public final class Foo implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("\nHello, , I'm humble Runnable from " + getClass().getName() + "!\n");
+        System.out.println("\nHello from " + getClass().getName() + "\n");
     }
 
     /**

@@ -11,9 +11,20 @@ import java.nio.file.Paths;
  */
 public interface SourceStorageFactory {
 
+    enum Media {
+        FS, DB
+    }
+
+    Media getMedia();
+
     SourceStorage create();
 
     final class Default implements SourceStorageFactory {
+
+        @Override
+        public Media getMedia() {
+            return Media.FS;
+        }
 
         @Override
         public SourceStorage create() {

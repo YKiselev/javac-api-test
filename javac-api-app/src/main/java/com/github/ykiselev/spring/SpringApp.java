@@ -21,26 +21,35 @@ public final class SpringApp {
 
     private void run() {
         logger.info("Starting...");
-        try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(new String[]{"/app.xml"}, false)) {
-            ctx.addProtocolResolver(new ScriptProtocolResolver(Paths.get(System.getProperty("scripts.base.folder"))));
-            ctx.refresh();
-
-            logger.info("Getting beans...");
-            final List<Object> javaBeans = ctx.getBean("javaBeans", List.class);
-            logger.info("Running beans...");
-            for (Object bean : javaBeans) {
-                new AnyObject(bean)
-                        .run();
-            }
-
-//            new AnyObject(ctx.getBean("javaBean"))
-//                    .run();
-
-            logger.info("And groovy bean...");
-            new AnyObject(ctx.getBean("groovyBean"))
+        final ScriptProtocolResolver scriptProtocolResolver = new ScriptProtocolResolver(
+                Paths.get(
+                        System.getProperty("scripts.base.folder")
+                )
+        );
+        try (ClassPathXmlApplicationContext parent = new ClassPathXmlApplicationContext(new String[]{"/parent.xml"}, false)) {
+            parent.addProtocolResolver(scriptProtocolResolver);
+            parent.refresh();
+            new AnyObject(parent.getBean("javaBean0"))
                     .run();
 
-            logger.info("Done!");
+            try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(new String[]{"/app.xml"}, false, parent)) {
+                ctx.addProtocolResolver(scriptProtocolResolver);
+                ctx.refresh();
+
+                logger.info("Getting beans...");
+                final List<Object> javaBeans = ctx.getBean("javaBeans", List.class);
+                logger.info("Running beans...");
+                for (Object bean : javaBeans) {
+                    new AnyObject(bean)
+                            .run();
+                }
+
+                logger.info("And groovy bean...");
+                new AnyObject(ctx.getBean("groovyBean"))
+                        .run();
+
+                logger.info("Done!");
+            }
         }
     }
 }

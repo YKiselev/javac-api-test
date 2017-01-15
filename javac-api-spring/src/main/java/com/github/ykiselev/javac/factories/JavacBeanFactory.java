@@ -10,7 +10,6 @@ import org.springframework.scripting.ScriptSource;
 
 import javax.tools.JavaFileObject.Kind;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -56,7 +55,7 @@ public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
         return classFactory.compile(
                 Collections.singletonList(
                         new StringJavaSource(
-                                URI.create("resource:///" + className.replaceAll("\\.", "/") + Kind.SOURCE.extension),
+                                className,
                                 Kind.SOURCE,
                                 source
                         )

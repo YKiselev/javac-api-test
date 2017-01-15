@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.tools.JavaFileObject;
 import java.io.*;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,7 +70,7 @@ public final class App {
         final ClassLoader classLoader = compile(
                 Collections.singletonList(
                         new StringJavaSource(
-                                URI.create("bytes:///" + className + ".java"),
+                                className,
                                 JavaFileObject.Kind.SOURCE,
                                 source
                         )
