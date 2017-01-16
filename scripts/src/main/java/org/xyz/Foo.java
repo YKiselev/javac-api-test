@@ -7,11 +7,11 @@ public final class Foo implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("\nHello, , I'm humble Runnable from " + getClass().getName() + "!\n");
+        System.out.println("\nHello from " + getClass().getName() + "!\n");
     }
 
     /**
-     * Internal class? Why not!
+     * Internal class.
      */
     public class A {
 

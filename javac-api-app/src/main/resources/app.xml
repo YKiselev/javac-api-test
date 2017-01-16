@@ -46,9 +46,9 @@
     </javac:bean>
 
     <util:list id="javaBeans">
-        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Bar.java"/>
         <ref bean="javaBean1"/>
         <ref bean="javaBean2"/>
+        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Bar.java"/>
         <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Foo.java"/>
         <javac:bean  class-factory="classFactory" script-source="script:org/Foo.java"/>
     </util:list>
