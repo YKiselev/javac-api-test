@@ -9,6 +9,8 @@
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
         http://ykiselev.github.com/schema/javac javac.xsd" default-lazy-init="true">
 
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"/>
+
     <bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">
         <constructor-arg type="java.lang.String" value="${scripts.baseFolder}"/>
         <constructor-arg value="UTF-8"/>
@@ -44,6 +46,7 @@
     </javac:bean>
 
     <util:list id="javaBeans">
+        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Bar.java"/>
         <ref bean="javaBean1"/>
         <ref bean="javaBean2"/>
         <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Foo.java"/>

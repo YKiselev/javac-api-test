@@ -4,7 +4,6 @@ import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.HasBinaryName;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,7 +12,6 @@ import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -42,14 +40,10 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
         logger.trace("Requested listing {} for {} : {}, recurse? {}", location, packageName, kinds, recurse);
-        final List<JavaFileObject> list = Lists.newArrayList(
-                super.list(location, packageName, kinds, recurse)
-        );
-        Iterables.addAll(
-                list,
+        return Iterables.concat(
+                super.list(location, packageName, kinds, recurse),
                 sourceStorage.list(packageName, recurse)
         );
-        return list;
     }
 
     @Override
