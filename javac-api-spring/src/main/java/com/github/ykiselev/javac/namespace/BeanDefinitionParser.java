@@ -28,8 +28,6 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
 
     @Override
     protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
-        final String classFactoryBean = ClassFactoryFactoryBean.register(parserContext.getRegistry());
-
         final BeanDefinitionBuilder properties = BeanDefinitionBuilder.rootBeanDefinition(LinkedHashMap.class);
         for (Element child : DomUtils.getChildElements(element)) {
             parserContext.getDelegate().parsePropertyElement(child, properties.getRawBeanDefinition());
@@ -43,10 +41,12 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
                 .getPropertyValueList()
                 .forEach(e -> map.put(e.getName(), e.getValue()));
 
-        final String scriptSource = element.getAttribute("script-source");
-        final UriScriptSource source = getSource(scriptSource, parserContext);
+        final UriScriptSource source = getSource(
+                element.getAttribute("script-source"),
+                parserContext
+        );
         final ConstructorArgumentValues args = builder.getRawBeanDefinition().getConstructorArgumentValues();
-        args.addIndexedArgumentValue(0, new RuntimeBeanReference(classFactoryBean));
+        args.addIndexedArgumentValue(0, new RuntimeBeanReference(element.getAttribute("class-factory")));
         args.addIndexedArgumentValue(1, source);
         args.addIndexedArgumentValue(2, map);
     }

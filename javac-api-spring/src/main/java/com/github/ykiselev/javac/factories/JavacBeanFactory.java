@@ -9,6 +9,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.scripting.ScriptSource;
 
 import javax.tools.JavaFileObject.Kind;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.Map;
@@ -51,7 +52,7 @@ public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
         BeanUtils.populate(object, properties);
     }
 
-    private ClassLoader compile(String className, String source) throws CompilationException {
+    private ClassLoader compile(String className, String source) throws CompilationException, IOException {
         return classFactory.compile(
                 Collections.singletonList(
                         new StringJavaSource(

@@ -45,7 +45,7 @@ public final class SpringApp {
     private ProtocolResolver createScriptProtocolResolver() {
         return new ScriptProtocolResolver(
                 Paths.get(
-                        System.getProperty("scripts.base.folder")
+                        System.getProperty("scripts.baseFolder")
                 )
         );
     }

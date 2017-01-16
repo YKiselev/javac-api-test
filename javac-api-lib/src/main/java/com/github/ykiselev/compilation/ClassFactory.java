@@ -15,7 +15,7 @@ import java.util.Objects;
  */
 public interface ClassFactory {
 
-    ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException;
+    ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException, IOException;
 
     /**
      *
@@ -30,14 +30,10 @@ public interface ClassFactory {
 
         public Default(SourceStorage sourceStorage, Writer out) {
             this.sourceStorage = Objects.requireNonNull(sourceStorage);
-            this.out = out;
+            this.out = Objects.requireNonNull(out);
         }
 
-        public Default(SourceStorage sourceStorage) {
-            this(sourceStorage, null);
-        }
-
-        private JavaFileManager createFileManager(ClassStorage storage) throws IOException {
+        private JavaFileManager createFileManager(ClassStorage storage) {
             return new StorageBackedJavaFileManager(
                     compiler.getStandardFileManager(
                             this::report,
@@ -50,7 +46,7 @@ public interface ClassFactory {
         }
 
         @Override
-        public ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException {
+        public ClassLoader compile(Iterable<? extends JavaFileObject> compilationUnits, ClassStorage classStorage) throws CompilationException, IOException {
             try (JavaFileManager fileManager = createFileManager(classStorage)) {
                 final JavaCompiler.CompilationTask task = compiler.getTask(
                         out,
@@ -61,11 +57,8 @@ public interface ClassFactory {
                         compilationUnits
                 );
                 if (task.call() != Boolean.TRUE) {
-                    out.flush();
                     throw new CompilationException("Compilation failed! See log for details.");
                 }
-            } catch (IOException ex) {
-                throw new CompilationException(ex);
             }
             return classStorage.classLoader();
         }

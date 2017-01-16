@@ -9,7 +9,21 @@
        http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd
         http://ykiselev.github.com/schema/javac javac.xsd" default-lazy-init="true">
 
-    <javac:bean id="javaBean1" script-source="script:org/xyz/Calc.java">
+    <bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">
+        <constructor-arg type="java.lang.String" value="${scripts.baseFolder}"/>
+        <constructor-arg value="UTF-8"/>
+    </bean>
+
+    <bean id="classFactory" class="com.github.ykiselev.compilation.ClassFactory.Default">
+        <constructor-arg ref="sourceStorage"/>
+        <constructor-arg type="java.io.Writer">
+            <bean class="java.io.OutputStreamWriter">
+                <constructor-arg value="#{T(System).out}"/>
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <javac:bean id="javaBean1" class-factory="classFactory" script-source="script:org/xyz/Calc.java">
         <property name="badTypes">
             <set>
                 <value>A</value>
@@ -19,26 +33,7 @@
         </property>
     </javac:bean>
 
-    <javac:bean id="javaBean2" script-source="script:org/xyz/Calc.java">
-        <property name="badTypes">
-            <set>
-                <value>B</value>
-                <value>D</value>
-            </set>
-        </property>
-    </javac:bean>
-
-    <javac:bean id="javaBean3" script-source="script:org/xyz/Calc.java">
-        <property name="badTypes">
-            <set>
-                <value>A</value>
-                <value>E</value>
-                <value>F</value>
-            </set>
-        </property>
-    </javac:bean>
-
-    <javac:bean id="javaBean4" script-source="script:org/xyz/Calc.java">
+    <javac:bean id="javaBean2" class-factory="classFactory" script-source="script:org/xyz/Calc.java">
         <property name="badTypes">
             <set>
                 <value>Z</value>
@@ -51,10 +46,8 @@
     <util:list id="javaBeans">
         <ref bean="javaBean1"/>
         <ref bean="javaBean2"/>
-        <ref bean="javaBean3"/>
-        <ref bean="javaBean4"/>
-        <javac:bean script-source="script:org/xyz/Foo.java"/>
-        <javac:bean script-source="script:org/Foo.java"/>
+        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Foo.java"/>
+        <javac:bean  class-factory="classFactory" script-source="script:org/Foo.java"/>
     </util:list>
 
     <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy" />
