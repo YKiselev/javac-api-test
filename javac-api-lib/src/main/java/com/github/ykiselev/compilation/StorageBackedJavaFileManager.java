@@ -40,10 +40,14 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
         logger.trace("Requested listing {} for {} : {}, recurse? {}", location, packageName, kinds, recurse);
-        return Iterables.concat(
-                super.list(location, packageName, kinds, recurse),
-                sourceStorage.list(packageName, recurse)
-        );
+        final Iterable<JavaFileObject> standard = super.list(location, packageName, kinds, recurse);
+        if (kinds.contains(JavaFileObject.Kind.SOURCE)) {
+            return Iterables.concat(
+                    standard,
+                    sourceStorage.list(packageName, recurse)
+            );
+        }
+        return standard;
     }
 
     @Override

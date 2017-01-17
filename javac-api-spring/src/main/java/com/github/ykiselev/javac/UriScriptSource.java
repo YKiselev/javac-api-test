@@ -5,6 +5,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.scripting.ScriptSource;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -23,7 +24,7 @@ public final class UriScriptSource implements ScriptSource {
 
     @Override
     public String getScriptAsString() throws IOException {
-        return IOUtils.toString(resource.getInputStream(), "utf-8");
+        return IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
     }
 
     @Override

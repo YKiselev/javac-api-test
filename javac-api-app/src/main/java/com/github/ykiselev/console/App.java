@@ -15,17 +15,19 @@ import org.apache.commons.lang3.StringUtils;
 import javax.tools.JavaFileObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
 public final class App {
-
-    private final BufferedReader input;
 
     private ClassFactory classFactory;
 
@@ -66,13 +68,12 @@ public final class App {
                 StandardCharsets.UTF_8
         );
         final String className = "EvaluatedScript";
-        final String source = template.replace("${expression}", expression);
         final ClassLoader classLoader = compile(
                 Collections.singletonList(
                         new StringJavaSource(
                                 className,
                                 JavaFileObject.Kind.SOURCE,
-                                source
+                                template.replace("${expression}", expression)
                         )
                 )
         );
@@ -128,7 +129,11 @@ public final class App {
         System.out.println("Compiling " + classNames + "...");
         final List<JavaFileObject> objects = new ArrayList<>(classNames.size());
         for (String className : classNames) {
-            objects.add(sourceStorage.resolve(className));
+            objects.add(
+                    sourceStorage.resolve(
+                            className.replace(".", File.separator) + JavaFileObject.Kind.SOURCE.extension
+                    )
+            );
         }
         final ClassLoader classLoader = compile(objects);
         System.out.println("Using class loader " + classLoader);
@@ -154,22 +159,17 @@ public final class App {
         System.exit(0);
     }
 
-    private App(BufferedReader input) {
-        this.input = Objects.requireNonNull(input);
-    }
-
     public static void main(String[] args) throws IOException {
-        new App(
-                new BufferedReader(
-                        new InputStreamReader(System.in)
-                )
-        ).run();
+        new App().run();
     }
 
     private void run() throws IOException {
         onHelp(new String[0]);
         onBase(new String[]{"", "../scripts/src/main/java"});
 
+        final BufferedReader input = new BufferedReader(
+                new InputStreamReader(System.in)
+        );
         String line;
         while ((line = input.readLine()) != null) {
             try {

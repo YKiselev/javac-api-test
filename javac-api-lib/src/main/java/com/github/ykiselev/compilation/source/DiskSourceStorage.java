@@ -48,21 +48,16 @@ public final class DiskSourceStorage implements SourceStorage {
     }
 
     @Override
-    public JavaFileObject resolve(String className) throws IOException {
+    public JavaFileObject resolve(String fileName) throws IOException {
         return fromPath(
-                base.resolve(classNameToFileName(className))
-                        .normalize()
+                base.resolve(fileName)
         );
-    }
-
-    private String classNameToFileName(String className) {
-        return className.replace(".", "/") + JavaFileObject.Kind.SOURCE.extension;
     }
 
     private JavaFileObject fromPath(Path path) {
         return new FileObject(
                 new UrlJavaSource(
-                        path.toUri(),
+                        path.normalize().toUri(),
                         JavaFileObject.Kind.SOURCE,
                         charset
                 )
@@ -74,17 +69,17 @@ public final class DiskSourceStorage implements SourceStorage {
      */
     private class FileObject extends ForwardingJavaFileObject<JavaFileObject> implements HasBinaryName {
 
-        private FileObject(JavaFileObject fileManager) {
-            super(fileManager);
+        private FileObject(JavaFileObject fileObject) {
+            super(fileObject);
         }
 
         @Override
         public String binaryName() {
-            final String relative = base.relativize(
-                    Paths.get(toUri())
-            ).toString();
-            return FilenameUtils.removeExtension(relative)
-                    .replace(File.separator, ".");
+            return FilenameUtils.removeExtension(
+                    base.relativize(
+                            Paths.get(toUri())
+                    ).toString()
+            ).replace(File.separator, ".");
         }
     }
 }

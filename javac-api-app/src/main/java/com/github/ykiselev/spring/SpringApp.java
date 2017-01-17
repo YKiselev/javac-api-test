@@ -1,11 +1,14 @@
 package com.github.ykiselev.spring;
 
 import com.github.ykiselev.AnyObject;
+import com.github.ykiselev.compilation.source.DiskSourceStorage;
+import com.github.ykiselev.compilation.source.SourceStorage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ProtocolResolver;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -22,8 +25,14 @@ public final class SpringApp {
 
     private void run() {
         logger.info("Starting...");
+        final DiskSourceStorage sourceStorage = new DiskSourceStorage(
+                Paths.get(
+                        System.getProperty("scripts.baseFolder")
+                ),
+                StandardCharsets.UTF_8
+        );
         try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(new String[]{"/app.xml"}, false)) {
-            ctx.addProtocolResolver(createScriptProtocolResolver());
+            ctx.addProtocolResolver(createScriptProtocolResolver(sourceStorage));
             ctx.refresh();
 
             logger.info("Getting beans...");
@@ -42,11 +51,12 @@ public final class SpringApp {
         }
     }
 
-    private ProtocolResolver createScriptProtocolResolver() {
-        return new ScriptProtocolResolver(
-                Paths.get(
-                        System.getProperty("scripts.baseFolder")
-                )
-        );
+    private ProtocolResolver createScriptProtocolResolver(SourceStorage sourceStorage) {
+        return new SourceStorageBasedProtocolResolver("script:", sourceStorage);
+//        return new ScriptProtocolResolver(
+//                Paths.get(
+//                        System.getProperty("scripts.baseFolder")
+//                )
+//        );
     }
 }
