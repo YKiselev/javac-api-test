@@ -13,9 +13,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.tools.JavaFileObject;
+import javax.tools.JavaFileObject.Kind;
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -40,9 +41,11 @@ public final class App {
     private final CommandProcessor processor = new CommandProcessor(
             ImmutableMap.<String, CommandHandler>builder()
                     .put("quit", this::onQuit)
+                    .put("q", this::onQuit)
                     .put("base", this::onBase)
                     .put("run", this::onRun)
                     .put("repeat", this::onRepeat)
+                    .put("r", this::onRepeat)
                     .put("test", this::onTest)
                     .put("help", this::onHelp)
                     .build(),
@@ -72,7 +75,7 @@ public final class App {
                 Collections.singletonList(
                         new StringJavaSource(
                                 className,
-                                JavaFileObject.Kind.SOURCE,
+                                Kind.SOURCE,
                                 template.replace("${expression}", expression)
                         )
                 )
@@ -105,13 +108,11 @@ public final class App {
         final File file = path.toFile();
         Preconditions.checkArgument(file.exists(), "Non-existing path: " + path);
         Preconditions.checkArgument(file.isDirectory(), "Not a directory: " + path);
-        this.sourceStorage = new DiskSourceStorage(
-                path,
-                StandardCharsets.UTF_8
-        );
+        this.sourceStorage = new DiskSourceStorage(path);
         this.classFactory = new ClassFactory.Default(
                 sourceStorage,
-                new OutputStreamWriter(System.out)
+                new OutputStreamWriter(System.out),
+                StandardCharsets.UTF_8
         );
         System.out.println("Scripts directory set to " + path);
     }
@@ -130,8 +131,15 @@ public final class App {
         final List<JavaFileObject> objects = new ArrayList<>(classNames.size());
         for (String className : classNames) {
             objects.add(
-                    sourceStorage.resolve(
-                            className.replace(".", File.separator) + JavaFileObject.Kind.SOURCE.extension
+                    new StringJavaSource(
+                            className,
+                            Kind.SOURCE,
+                            IOUtils.toString(
+                                    sourceStorage.resolve(
+                                            className.replace(".", File.separator) + Kind.SOURCE.extension
+                                    ),
+                                    StandardCharsets.UTF_8
+                            )
                     )
             );
         }

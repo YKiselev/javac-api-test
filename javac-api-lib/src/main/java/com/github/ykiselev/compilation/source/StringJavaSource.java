@@ -13,7 +13,7 @@ public final class StringJavaSource extends SimpleJavaFileObject {
     private final String content;
 
     public StringJavaSource(String className, Kind kind, String content) {
-        super(URI.create("resource:///" + className.replaceAll("\\.", "/") + kind.extension), kind);
+        super(URI.create("string:///" + className.replaceAll("\\.", "/") + kind.extension), kind);
         this.content = Objects.requireNonNull(content);
     }
 

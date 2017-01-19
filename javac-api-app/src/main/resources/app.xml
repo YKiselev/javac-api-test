@@ -11,10 +11,10 @@
 
     <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"/>
 
-    <bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">
-        <constructor-arg type="java.lang.String" value="${scripts.baseFolder}"/>
-        <constructor-arg value="UTF-8"/>
-    </bean>
+    <!--<bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">-->
+        <!--<constructor-arg type="java.lang.String" value="${scripts.baseFolder}"/>-->
+        <!--<constructor-arg value="UTF-8"/>-->
+    <!--</bean>-->
 
     <bean id="classFactory" class="com.github.ykiselev.compilation.ClassFactory.Default">
         <constructor-arg ref="sourceStorage"/>
@@ -23,6 +23,7 @@
                 <constructor-arg value="#{T(System).out}"/>
             </bean>
         </constructor-arg>
+        <constructor-arg type="java.nio.charset.Charset" value="utf-8"/>
     </bean>
 
     <javac:bean id="javaBean1" class-factory="classFactory" script-source="script:org/xyz/Calc.java">

@@ -4,16 +4,19 @@ import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.HasBinaryName;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.collect.Iterables;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
+import javax.tools.*;
 import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
@@ -26,10 +29,13 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
 
     private final SourceStorage sourceStorage;
 
-    public StorageBackedJavaFileManager(JavaFileManager fileManager, SourceStorage sourceStorage, ClassStorage classStorage) {
+    private final Charset charset;
+
+    public StorageBackedJavaFileManager(JavaFileManager fileManager, SourceStorage sourceStorage, ClassStorage classStorage, Charset charset) {
         super(fileManager);
         this.sourceStorage = Objects.requireNonNull(sourceStorage);
         this.classStorage = Objects.requireNonNull(classStorage);
+        this.charset = Objects.requireNonNull(charset);
     }
 
     @Override
@@ -40,14 +46,19 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
     @Override
     public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse) throws IOException {
         logger.trace("Requested listing {} for {} : {}, recurse? {}", location, packageName, kinds, recurse);
-        final Iterable<JavaFileObject> standard = super.list(location, packageName, kinds, recurse);
-        if (kinds.contains(JavaFileObject.Kind.SOURCE)) {
-            return Iterables.concat(
-                    standard,
-                    sourceStorage.list(packageName, recurse)
-            );
-        }
-        return standard;
+        return Iterables.concat(
+                super.list(location, packageName, kinds, recurse),
+                kinds.contains(JavaFileObject.Kind.SOURCE)
+                        ? list(packageName, recurse)
+                        : Collections.emptyList()
+        );
+    }
+
+    private Iterable<JavaFileObject> list(String packageName, boolean recurse) throws IOException {
+        return sourceStorage.list(packageName, recurse)
+                .stream()
+                .map(SourceFileObject::new)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -73,4 +84,29 @@ public final class StorageBackedJavaFileManager extends ForwardingJavaFileManage
         return fileObject;
     }
 
+    /**
+     *
+     */
+    private class SourceFileObject extends SimpleJavaFileObject implements HasBinaryName {
+
+        SourceFileObject(String path) {
+            // URI i very important here, URI#getPath() should return something, resolvable through SourceStorage#resolve()
+            super(URI.create(path.replaceAll("\\\\", "/")), Kind.SOURCE);
+        }
+
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+            return IOUtils.toString(
+                    sourceStorage.resolve(getName()),
+                    charset
+            );
+        }
+
+        @Override
+        public String binaryName() {
+            return FilenameUtils.removeExtension(
+                    toUri().getPath()
+            ).replace("/", ".");
+        }
+    }
 }

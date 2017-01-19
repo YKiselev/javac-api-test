@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableList;
 import javax.tools.*;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -28,9 +29,12 @@ public interface ClassFactory {
 
         private final SourceStorage sourceStorage;
 
-        public Default(SourceStorage sourceStorage, Writer out) {
+        private final Charset charset;
+
+        public Default(SourceStorage sourceStorage, Writer out, Charset charset) {
             this.sourceStorage = Objects.requireNonNull(sourceStorage);
             this.out = Objects.requireNonNull(out);
+            this.charset = Objects.requireNonNull(charset);
         }
 
         private JavaFileManager createFileManager(ClassStorage storage) {
@@ -41,7 +45,8 @@ public interface ClassFactory {
                             null
                     ),
                     sourceStorage,
-                    storage
+                    storage,
+                    charset
             );
         }
 

@@ -3,13 +3,13 @@ package com.github.ykiselev.spring;
 import com.github.ykiselev.compilation.source.SourceStorage;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.ProtocolResolver;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
 import java.util.Objects;
 
 /**
@@ -34,22 +34,32 @@ public final class SourceStorageBasedProtocolResolver implements ProtocolResolve
         if (location.startsWith(protocol)) {
             final String fileName = location.substring(protocol.length());
             try {
-                return new ByteArrayResource(
-                        storage.resolve(fileName)
-                                .getCharContent(false)
-                                .toString()
-                                .getBytes(StandardCharsets.UTF_8),
-                        location
-                ) {
-                    @Override
-                    public String getFilename() {
-                        return fileName;
-                    }
-                };
+                return new InputStreamResourceWithFileName(
+                        storage.resolve(fileName),
+                        fileName
+                );
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
         }
         return null;
+    }
+
+    /**
+     *
+     */
+    private static class InputStreamResourceWithFileName extends InputStreamResource {
+
+        final String fileName;
+
+        InputStreamResourceWithFileName(InputStream is, String fileName) {
+            super(is);
+            this.fileName = Objects.requireNonNull(fileName);
+        }
+
+        @Override
+        public String getFilename() {
+            return fileName;
+        }
     }
 }
