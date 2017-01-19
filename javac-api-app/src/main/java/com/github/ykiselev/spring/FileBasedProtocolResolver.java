@@ -13,23 +13,24 @@ import java.util.Objects;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class ScriptProtocolResolver implements ProtocolResolver {
+public final class FileBasedProtocolResolver implements ProtocolResolver {
 
-    static final String PREFIX = "script:";
+    private final String protocol;
 
     private final Path base;
 
-    public ScriptProtocolResolver(Path base) {
+    public FileBasedProtocolResolver(Path base, String protocol) {
         this.base = Objects.requireNonNull(base);
+        this.protocol = Objects.requireNonNull(protocol);
     }
 
     @Override
     public Resource resolve(String location, ResourceLoader resourceLoader) {
-        if (location.startsWith(PREFIX)) {
+        if (location.startsWith(protocol)) {
             try {
                 return new UrlResource(
                         base.resolve(
-                                location.substring(PREFIX.length())
+                                location.substring(protocol.length())
                         ).toAbsolutePath()
                                 .normalize()
                                 .toFile()
