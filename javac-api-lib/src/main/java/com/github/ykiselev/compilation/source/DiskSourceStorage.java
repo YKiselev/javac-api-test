@@ -19,8 +19,7 @@ public final class DiskSourceStorage implements SourceStorage {
     private final Path base;
 
     public DiskSourceStorage(Path base) {
-        this.base = Objects.requireNonNull(base).toAbsolutePath()
-                .normalize();
+        this.base = Objects.requireNonNull(base).normalize();
     }
 
     public DiskSourceStorage(String base) {

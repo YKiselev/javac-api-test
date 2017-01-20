@@ -11,11 +11,6 @@
 
     <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"/>
 
-    <!--<bean id="sourceStorage" class="com.github.ykiselev.compilation.source.DiskSourceStorage">-->
-        <!--<constructor-arg type="java.lang.String" value="${scripts.baseFolder}"/>-->
-        <!--<constructor-arg value="UTF-8"/>-->
-    <!--</bean>-->
-
     <bean id="classFactory" class="com.github.ykiselev.compilation.ClassFactory.Default">
         <constructor-arg ref="sourceStorage"/>
         <constructor-arg type="java.io.Writer">
@@ -36,22 +31,17 @@
         </property>
     </javac:bean>
 
-    <javac:bean id="javaBean2" class-factory="classFactory" script-source="script:org/xyz/Calc.java">
-        <property name="badTypes">
-            <set>
-                <value>Z</value>
-                <value>F</value>
-                <value>B</value>
-            </set>
-        </property>
-    </javac:bean>
-
     <util:list id="javaBeans">
         <ref bean="javaBean1"/>
-        <ref bean="javaBean2"/>
-        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Bar.java"/>
-        <javac:bean  class-factory="classFactory" script-source="script:org/xyz/Foo.java"/>
-        <javac:bean  class-factory="classFactory" script-source="script:org/Foo.java"/>
+        <javac:bean class-factory="classFactory" script-source="script:org/xyz/Calc.java">
+            <property name="badTypes">
+                <set>
+                    <value>Z</value>
+                    <value>F</value>
+                    <value>B</value>
+                </set>
+            </property>
+        </javac:bean>
     </util:list>
 
     <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy" />
