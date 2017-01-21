@@ -46,7 +46,7 @@ public final class App {
                     .put("gc", this::onGc)
                     .put("help", this::onHelp)
                     .build(),
-            this::onEval
+            null
     );
 
     private Set<ClassLoader> getTrackedClassLoaders() {
@@ -88,29 +88,6 @@ public final class App {
         } catch (ClassNotFoundException e) {
             System.out.println(e.toString());
         }
-    }
-
-    private void onEval(String[] args) throws Exception {
-        Preconditions.checkArgument(args.length >= 1, "Need some expression to evaluate!");
-        final String expression = Arrays.stream(args)
-                .collect(Collectors.joining(" "));
-        final String template = IOUtils.toString(
-                getClass().getResourceAsStream("/runnable.template"),
-                StandardCharsets.UTF_8
-        );
-        final String className = "EvaluatedScript";
-        final ClassLoader classLoader = compile(
-                Collections.singletonList(
-                        new StringJavaSource(
-                                className,
-                                Kind.SOURCE,
-                                template.replace("${expression}", expression)
-                        )
-                )
-        );
-        runClass(
-                classLoader.loadClass(className)
-        );
     }
 
     private void onRepeat(String[] args) throws Exception {

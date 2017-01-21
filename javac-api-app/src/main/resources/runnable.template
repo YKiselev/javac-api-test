@@ -1,7 +1,0 @@
-public final class EvaluatedScript implements Runnable {
-
-    @Override
-    public void run() {
-        ${expression}
-    }
-}
