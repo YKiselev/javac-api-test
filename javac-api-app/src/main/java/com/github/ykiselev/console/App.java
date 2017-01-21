@@ -1,25 +1,23 @@
 package com.github.ykiselev.console;
 
 import com.github.ykiselev.AnyObject;
-import com.github.ykiselev.compilation.ClassFactory;
 import com.github.ykiselev.compilation.CompilationException;
-import com.github.ykiselev.compilation.TrackingClassFactory;
-import com.github.ykiselev.compilation.compiled.ClassStorage;
-import com.github.ykiselev.compilation.source.DiskSourceStorage;
-import com.github.ykiselev.compilation.source.StringJavaSource;
 import com.github.ykiselev.console.CommandProcessor.CommandHandler;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.tools.JavaFileObject;
-import javax.tools.JavaFileObject.Kind;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -27,13 +25,9 @@ import java.util.stream.Collectors;
  */
 public final class App {
 
-    private ClassFactory classFactory;
+    private Compiler compiler;
 
-    private DiskSourceStorage sourceStorage;
-
-    private String lastLine;
-
-    private String deferredLine;
+    private boolean repeatLastLine;
 
     private final CommandProcessor processor = new CommandProcessor(
             ImmutableMap.<String, CommandHandler>builder()
@@ -49,15 +43,9 @@ public final class App {
             null
     );
 
-    private Set<ClassLoader> getTrackedClassLoaders() {
-        if (classFactory instanceof TrackingClassFactory) {
-            return ((TrackingClassFactory) classFactory).getTrackedClassLoaders();
-        }
-        return Collections.emptySet();
-    }
 
     private int printTrackedClassLoaders() {
-        final Set<ClassLoader> classLoaders = getTrackedClassLoaders();
+        final Set<ClassLoader> classLoaders = compiler.getTrackedClassLoaders();
         if (classLoaders.isEmpty()) {
             System.out.println("No class loaders tracked.");
         } else {
@@ -91,11 +79,7 @@ public final class App {
     }
 
     private void onRepeat(String[] args) throws Exception {
-        if (StringUtils.isNotEmpty(lastLine)) {
-            deferredLine = lastLine;
-        } else {
-            System.out.println("There is nothing to repeat!");
-        }
+        repeatLastLine = true;
     }
 
     private void onHelp(String[] args) {
@@ -113,14 +97,7 @@ public final class App {
         final File file = path.toFile();
         Preconditions.checkArgument(file.exists(), "Non-existing path: " + path);
         Preconditions.checkArgument(file.isDirectory(), "Not a directory: " + path);
-        this.sourceStorage = new DiskSourceStorage(path);
-        this.classFactory = new TrackingClassFactory(
-                new ClassFactory.Default(
-                        sourceStorage,
-                        new OutputStreamWriter(System.out),
-                        StandardCharsets.UTF_8
-                )
-        );
+        this.compiler = Compiler.fromPath(path);
         System.out.println("Scripts directory set to " + path);
     }
 
@@ -138,19 +115,10 @@ public final class App {
         final List<JavaFileObject> objects = new ArrayList<>(classNames.size());
         for (String className : classNames) {
             objects.add(
-                    new StringJavaSource(
-                            className,
-                            Kind.SOURCE,
-                            IOUtils.toString(
-                                    sourceStorage.resolve(
-                                            className.replace(".", File.separator) + Kind.SOURCE.extension
-                                    ),
-                                    StandardCharsets.UTF_8
-                            )
-                    )
+                    compiler.resolve(className)
             );
         }
-        final ClassLoader classLoader = compile(objects);
+        final ClassLoader classLoader = compiler.compile(objects);
         System.out.println("Using class loader " + classLoader);
         for (String className : classNames) {
             System.out.println("Loading class: " + className);
@@ -158,15 +126,6 @@ public final class App {
                     classLoader.loadClass(className)
             );
         }
-    }
-
-    private ClassLoader compile(Iterable<JavaFileObject> compilationUnits) throws Exception {
-        return classFactory.compile(
-                compilationUnits,
-                new ClassStorage.Default(
-                        getClass().getClassLoader()
-                )
-        );
     }
 
     private void onQuit(String[] args) {
@@ -185,24 +144,29 @@ public final class App {
         final BufferedReader input = new BufferedReader(
                 new InputStreamReader(System.in)
         );
-        String line;
+
+        String line, lastLine = null;
         while ((line = input.readLine()) != null) {
             try {
                 if (!line.equals("repeat") && !line.equals("r")) {
                     lastLine = line;
                 }
                 processor.execute(line);
-                if (deferredLine != null) {
-                    try {
-                        processor.execute(deferredLine);
-                    } finally {
-                        deferredLine = null;
+                if (repeatLastLine) {
+                    if (StringUtils.isNotEmpty(lastLine)) {
+                        try {
+                            processor.execute(lastLine);
+                        } finally {
+                            repeatLastLine = false;
+                        }
+                    } else {
+                        System.out.println("There is nothing to repeat!");
                     }
                 }
             } catch (CompilationException ex) {
                 System.err.println(ex.getMessage());
             } catch (IllegalArgumentException ex) {
-                System.err.println(ex);
+                System.err.println(ex.toString());
             } catch (Exception ex) {
                 ex.printStackTrace(System.err);
             }

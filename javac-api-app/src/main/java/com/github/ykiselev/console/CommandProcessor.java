@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class CommandProcessor {
+final class CommandProcessor {
 
     public interface CommandHandler {
 
