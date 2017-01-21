@@ -2,7 +2,7 @@ package com.github.ykiselev.spring;
 
 import com.github.ykiselev.AnyObject;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
-import com.github.ykiselev.javac.ExternalSingletons;
+import com.github.ykiselev.javac.postprocessors.ExternalSingletons;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

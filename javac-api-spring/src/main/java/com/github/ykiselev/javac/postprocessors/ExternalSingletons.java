@@ -1,4 +1,4 @@
-package com.github.ykiselev.javac;
+package com.github.ykiselev.javac.postprocessors;
 
 import com.google.common.collect.ImmutableMap;
 import org.springframework.beans.BeansException;

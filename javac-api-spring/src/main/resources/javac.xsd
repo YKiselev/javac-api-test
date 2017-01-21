@@ -12,7 +12,7 @@
         <xsd:complexType mixed="true">
             <xsd:complexContent>
                 <xsd:extension base="beans:identifiedType">
-                    <xsd:choice minOccurs="0" maxOccurs="1">
+                    <xsd:choice minOccurs="0" maxOccurs="unbounded">
                         <xsd:element ref="beans:property"/>
                     </xsd:choice>
                     <xsd:attribute name="class-factory" type="xsd:string" use="required"/>

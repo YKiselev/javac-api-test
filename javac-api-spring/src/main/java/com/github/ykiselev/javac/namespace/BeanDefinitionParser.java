@@ -1,8 +1,8 @@
 package com.github.ykiselev.javac.namespace;
 
-import com.github.ykiselev.javac.UriScriptSource;
 import com.github.ykiselev.javac.factories.JavacBeanFactory;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.RuntimeBeanReference;
@@ -10,11 +10,16 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
+import org.springframework.core.io.Resource;
+import org.springframework.scripting.ScriptSource;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
@@ -65,4 +70,35 @@ public final class BeanDefinitionParser extends AbstractSingleBeanDefinitionPars
                 ).replaceAll("\\\\|/", "\\.")
         );
     }
+
+    /**
+     *
+     */
+    private static class UriScriptSource implements ScriptSource {
+
+        final Resource resource;
+
+        final String className;
+
+        UriScriptSource(Resource resource, String className) {
+            this.resource = Objects.requireNonNull(resource);
+            this.className = Objects.requireNonNull(className);
+        }
+
+        @Override
+        public String getScriptAsString() throws IOException {
+            return IOUtils.toString(resource.getInputStream(), StandardCharsets.UTF_8);
+        }
+
+        @Override
+        public boolean isModified() {
+            return false;
+        }
+
+        @Override
+        public String suggestedClassName() {
+            return className;
+        }
+    }
+
 }

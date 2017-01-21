@@ -4,7 +4,8 @@ import com.github.ykiselev.compilation.ClassFactory;
 import com.github.ykiselev.compilation.CompilationException;
 import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.StringJavaSource;
-import org.apache.commons.beanutils.BeanUtils;
+import com.google.common.base.Throwables;
+import org.apache.commons.beanutils.BeanUtilsBean2;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.scripting.ScriptSource;
 
@@ -49,7 +50,15 @@ public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
         if (properties.isEmpty()) {
             return;
         }
-        BeanUtils.populate(object, properties);
+        final BeanUtilsBean2 beanUtils = new BeanUtilsBean2();
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            try {
+                beanUtils.getPropertyUtils().setProperty(object, entry.getKey(), entry.getValue());
+            } catch (NoSuchMethodException e) {
+                throw Throwables.propagate(e);
+            }
+        }
+        //BeanUtils.populate(object, properties);
     }
 
     private ClassLoader compile(String className, String source) throws CompilationException, IOException {
