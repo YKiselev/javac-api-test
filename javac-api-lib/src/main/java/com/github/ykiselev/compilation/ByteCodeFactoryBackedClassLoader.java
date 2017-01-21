@@ -32,11 +32,4 @@ public final class ByteCodeFactoryBackedClassLoader extends SecureClassLoader {
         }
         return super.findClass(name);
     }
-
-    @Override
-    protected void finalize() throws Throwable {
-        // todo - debug only!
-        System.out.println("Freeing classloader: " + this);
-        super.finalize();
-    }
 }

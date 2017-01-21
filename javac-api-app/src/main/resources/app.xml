@@ -44,6 +44,6 @@
         </javac:bean>
     </util:list>
 
-    <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy" />
+    <lang:groovy id="groovyBean" script-source="script:org/xyz/GroovyBean.groovy"/>
 
 </beans>

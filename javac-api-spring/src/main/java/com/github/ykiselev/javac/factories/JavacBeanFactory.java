@@ -19,7 +19,7 @@ import java.util.Objects;
 /**
  * @author Yuriy Kiselev (uze@yandex.ru).
  */
-public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
+public final class JavacBeanFactory extends AbstractFactoryBean<Object> {
 
     private final ClassFactory classFactory;
 
@@ -34,7 +34,7 @@ public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
     }
 
     @Override
-    protected I createInstance() throws Exception {
+    protected Object createInstance() throws Exception {
         final String className = resource.suggestedClassName();
         final ClassLoader classLoader = compile(
                 className,
@@ -43,7 +43,7 @@ public final class JavacBeanFactory<I> extends AbstractFactoryBean<I> {
         final Object obj = classLoader.loadClass(className)
                 .newInstance();
         setProperties(obj);
-        return (I) obj;
+        return obj;
     }
 
     private void setProperties(Object object) throws InvocationTargetException, IllegalAccessException {

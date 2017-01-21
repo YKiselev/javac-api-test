@@ -3,6 +3,7 @@ package com.github.ykiselev.console;
 import com.github.ykiselev.AnyObject;
 import com.github.ykiselev.compilation.ClassFactory;
 import com.github.ykiselev.compilation.CompilationException;
+import com.github.ykiselev.compilation.TrackingClassFactory;
 import com.github.ykiselev.compilation.compiled.ClassStorage;
 import com.github.ykiselev.compilation.source.DiskSourceStorage;
 import com.github.ykiselev.compilation.source.StringJavaSource;
@@ -15,14 +16,10 @@ import org.apache.commons.lang3.StringUtils;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import java.io.*;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -41,16 +38,47 @@ public final class App {
     private final CommandProcessor processor = new CommandProcessor(
             ImmutableMap.<String, CommandHandler>builder()
                     .put("quit", this::onQuit)
-                    .put("q", this::onQuit)
                     .put("base", this::onBase)
                     .put("run", this::onRun)
                     .put("repeat", this::onRepeat)
                     .put("r", this::onRepeat)
                     .put("test", this::onTest)
+                    .put("gc", this::onGc)
                     .put("help", this::onHelp)
                     .build(),
             this::onEval
     );
+
+    private Set<ClassLoader> getTrackedClassLoaders() {
+        if (classFactory instanceof TrackingClassFactory) {
+            return ((TrackingClassFactory) classFactory).getTrackedClassLoaders();
+        }
+        return Collections.emptySet();
+    }
+
+    private int printTrackedClassLoaders() {
+        final Set<ClassLoader> classLoaders = getTrackedClassLoaders();
+        if (classLoaders.isEmpty()) {
+            System.out.println("No class loaders tracked.");
+        } else {
+            System.out.println("Tracked class loaders:");
+            for (ClassLoader classLoader : classLoaders) {
+                System.out.println("  " + classLoader);
+            }
+        }
+        return classLoaders.size();
+    }
+
+    private void onGc(String[] args) {
+        final long fmBefore = Runtime.getRuntime().freeMemory() / 1024;
+        final int before = printTrackedClassLoaders();
+        System.gc();
+        final long fmAfter = Runtime.getRuntime().freeMemory() / 1024;
+        if (before > 0) {
+            printTrackedClassLoaders();
+        }
+        System.out.println("Free memory before: " + fmBefore + " KB, after: " + fmAfter + " KB, delta: +" + Math.max(0, fmAfter - fmBefore) + " KB");
+    }
 
     private void onTest(String[] args) {
         Preconditions.checkArgument(args.length == 2, "Need class name!");
@@ -109,10 +137,12 @@ public final class App {
         Preconditions.checkArgument(file.exists(), "Non-existing path: " + path);
         Preconditions.checkArgument(file.isDirectory(), "Not a directory: " + path);
         this.sourceStorage = new DiskSourceStorage(path);
-        this.classFactory = new ClassFactory.Default(
-                sourceStorage,
-                new OutputStreamWriter(System.out),
-                StandardCharsets.UTF_8
+        this.classFactory = new TrackingClassFactory(
+                new ClassFactory.Default(
+                        sourceStorage,
+                        new OutputStreamWriter(System.out),
+                        StandardCharsets.UTF_8
+                )
         );
         System.out.println("Scripts directory set to " + path);
     }
@@ -181,7 +211,7 @@ public final class App {
         String line;
         while ((line = input.readLine()) != null) {
             try {
-                if (!StringUtils.equals("repeat", line)) {
+                if (!line.equals("repeat") && !line.equals("r")) {
                     lastLine = line;
                 }
                 processor.execute(line);
